@@ -42,19 +42,25 @@ export default async function GalleryPage() {
 
       {images.length > 0 ? (
         <section className="overflow-hidden py-8 sm:py-12">
-          <div className="mx-auto grid max-w-6xl items-center gap-8 px-5 sm:gap-10 lg:grid-cols-2">
+          {/* items-stretch so both halves end up the same height, with the
+              cylinder — the one with a height it cannot change — setting it. */}
+          <div className="mx-auto grid max-w-6xl items-stretch gap-8 px-5 sm:gap-10 lg:grid-cols-2">
             {/* left — one frame at a time, drifting slowly */}
-            <div>
+            <div className="flex flex-col">
               <p className="mb-3 text-xs uppercase tracking-[0.2em] text-accent">In Detail</p>
-              <SlowFadeStack images={images.slice(0, 8)} />
+              <div className="flex-1">
+                <SlowFadeStack images={images.slice(0, 8)} />
+              </div>
             </div>
 
             {/* right — the whole set turning on a cylinder */}
-            <div>
+            <div className="flex flex-col">
               <p className="mb-3 text-center text-xs uppercase tracking-[0.2em] text-accent lg:text-left">
                 Everything We&apos;ve Made
               </p>
-              <CylinderGallery images={images} />
+              <div className="flex flex-1 items-center">
+                <CylinderGallery images={images} />
+              </div>
             </div>
           </div>
         </section>
