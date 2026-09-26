@@ -141,6 +141,18 @@ export default function CylinderGallery({ images }: { images: string[] }) {
                   WebkitBackfaceVisibility: "hidden",
                 }}
               >
+                {/* The same photo, enlarged and blurred, behind the real one.
+                    A contained photo leaves bare strips wherever its shape
+                    differs from the panel — square shots in a 3:4 panel left a
+                    white band top and bottom. This fills them with the photo's
+                    own colours, so nothing is cropped and no gap shows. */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={url}
+                  alt=""
+                  aria-hidden
+                  className="absolute inset-0 h-full w-full scale-110 object-cover blur-lg"
+                />
                 {/* contain, not cover: the shop's photos carry a logo in one
                     corner, and cropping to fill the panel sliced it in half. */}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -149,7 +161,7 @@ export default function CylinderGallery({ images }: { images: string[] }) {
                   alt=""
                   loading="lazy"
                   decoding="async"
-                  className="h-full w-full object-contain"
+                  className="absolute inset-0 h-full w-full object-contain"
                 />
               </div>
             );

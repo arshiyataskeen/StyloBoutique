@@ -28,6 +28,18 @@ function Frame({
   onOpen: (url: string) => void;
 }) {
   const [step, setStep] = useState(0);
+  /**
+   * The shape of the photo currently in this frame.
+   *
+   * The frames used to be a fixed 3:4, which suited the portrait shots and left
+   * a pale band above and below the square ones. Reading each photo's real
+   * proportions when it loads lets the frame take that shape instead, so the
+   * picture fills it exactly and nothing is cropped or padded.
+   *
+   * 0.75 until the first one loads — a sensible starting shape rather than a
+   * collapsed box.
+   */
+  const [ratio, setRatio] = useState(0.75);
 
   useEffect(() => {
     if (images.length <= FRAMES.length) return;
@@ -59,9 +71,12 @@ function Frame({
       whileHover={{ y: -3 }}
       viewport={{ once: true, margin: "-40px" }}
       transition={{ duration: 0.6, delay: seat * 0.08, ease: EASE }}
-      // 3:4 matches the shop's portrait photos almost exactly, so containing
-      // them leaves next to no empty space.
-      className="group relative aspect-[3/4] cursor-zoom-in overflow-hidden rounded-2xl border border-border bg-background"
+      // The frame takes the photo's own shape, eased so a change of shape on
+      // rotation reads as the frame settling rather than a jump.
+      // break-inside-avoid keeps a frame from being split across the column
+      // boundary, which is what CSS columns would otherwise do.
+      style={{ aspectRatio: ratio, breakInside: "avoid" }}
+      className="group relative mb-3 block w-full cursor-zoom-in overflow-hidden rounded-2xl border border-border bg-background transition-[aspect-ratio] duration-700 ease-out sm:mb-4"
     >
       <AnimatePresence mode="popLayout" initial={false}>
         <motion.img
@@ -74,9 +89,15 @@ function Frame({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 1.1, ease: EASE }}
-          // contain, not cover. Cropping to fill the frame cut the hem off the
-          // garments and sliced the logo in the corner of the photo in half.
-          className="absolute inset-0 h-full w-full object-contain"
+          onLoad={(event) => {
+            const img = event.currentTarget;
+            if (img.naturalWidth && img.naturalHeight) {
+              setRatio(img.naturalWidth / img.naturalHeight);
+            }
+          }}
+          // cover is safe here precisely because the frame has taken the
+          // photo's own shape — there is nothing left to crop.
+          className="absolute inset-0 h-full w-full object-cover"
         />
       </AnimatePresence>
 
@@ -112,7 +133,10 @@ export default function GalleryCollage({
   if (images.length === 0) return null;
 
   return (
-    <div className="grid grid-cols-2 gap-3 sm:gap-4">
+    // Columns, not a grid: now that each frame takes its photo's own shape they
+    // are different heights, and grid cells in a row would stretch to match the
+    // tallest — putting the empty space straight back.
+    <div className="columns-2 gap-3 sm:gap-4">
       {FRAMES.map((frame, i) => (
         <Frame
           key={i}
