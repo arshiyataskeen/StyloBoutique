@@ -16,12 +16,13 @@ const EASE = [0.22, 1, 0.36, 1] as const;
  * unlike a chat, leaves a tracked record with a reference code.
  */
 export default function AskPriceButtons({
-  phone,
+  whatsapp,
   siteName,
   designName,
   className,
 }: {
-  phone?: string | null;
+  /** The WhatsApp line, which may differ from the number on display. */
+  whatsapp?: string | null;
   siteName: string;
   designName: string;
   className?: string;
@@ -31,9 +32,9 @@ export default function AskPriceButtons({
   return (
     <div className={className}>
       <div className="flex flex-wrap gap-2.5">
-        {phone && (
+        {whatsapp && (
           <motion.a
-            href={whatsappLink({ phone, siteName, designName })}
+            href={whatsappLink({ phone: whatsapp, siteName, designName })}
             target="_blank"
             rel="noopener noreferrer"
             initial={{ opacity: 0, y: 8 }}

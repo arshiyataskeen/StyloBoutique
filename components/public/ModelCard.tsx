@@ -11,17 +11,17 @@ const EASE = [0.22, 1, 0.36, 1] as const;
 export default function ModelCard({
   model,
   index = 0,
-  phone,
+  whatsapp,
   siteName = "Stylo",
 }: {
   model: ModelDTO;
   index?: number;
-  phone?: string | null;
+  whatsapp?: string | null;
   siteName?: string;
 }) {
   const image = model.images[0];
   const hidden = isPriceHidden(model.priceDisplay);
-  const askable = hidden && Boolean(phone);
+  const askable = hidden && Boolean(whatsapp);
 
   return (
     <motion.div
@@ -84,7 +84,7 @@ export default function ModelCard({
 
         {askable && (
           <a
-            href={whatsappLink({ phone: phone!, siteName, designName: model.name })}
+            href={whatsappLink({ phone: whatsapp!, siteName, designName: model.name })}
             target="_blank"
             rel="noopener noreferrer"
             // z-20 puts it above the stretched link below.

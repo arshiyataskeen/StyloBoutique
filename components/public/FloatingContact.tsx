@@ -10,10 +10,14 @@ const EASE = [0.22, 1, 0.36, 1] as const;
 
 export default function FloatingContact({
   phone,
+  whatsapp,
   siteName,
   instagramUrl,
 }: {
+  /** Shown as "Call us". */
   phone: string;
+  /** WhatsApp goes here — often a different line. Falls back to `phone`. */
+  whatsapp?: string | null;
   siteName: string;
   instagramUrl?: string | null;
 }) {
@@ -50,7 +54,7 @@ export default function FloatingContact({
     };
   }, [open]);
 
-  const digits = phone.replace(/\D/g, "");
+  const digits = (whatsapp || phone).replace(/\D/g, "");
   const waNumber = digits.length === 10 ? `91${digits}` : digits;
   const waText = encodeURIComponent(
     `Hi ${siteName}, I'd like to enquire about getting something stitched.`

@@ -27,11 +27,11 @@ const row = {
 
 export default function ModelDetail({
   model,
-  phone,
+  whatsapp,
   siteName,
 }: {
   model: ModelDTO;
-  phone?: string | null;
+  whatsapp?: string | null;
   siteName: string;
 }) {
   const category = typeof model.category === "string" ? null : model.category;
@@ -119,7 +119,7 @@ export default function ModelDetail({
 
             {hidden && (
               <AskPriceButtons
-                phone={phone}
+                whatsapp={whatsapp}
                 siteName={siteName}
                 designName={model.name}
                 className="mt-4"

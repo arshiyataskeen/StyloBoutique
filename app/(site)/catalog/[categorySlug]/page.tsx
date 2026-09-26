@@ -66,7 +66,7 @@ export default async function CategoryPage({
                 key={model.id}
                 model={model}
                 index={i}
-                phone={settings.shopPhone}
+                whatsapp={settings.whatsappNumber || settings.shopPhone}
                 siteName={settings.siteName}
               />
             ))}

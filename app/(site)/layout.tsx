@@ -38,6 +38,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
       {settings.shopPhone && (
         <FloatingContact
           phone={settings.shopPhone}
+          whatsapp={settings.whatsappNumber}
           siteName={settings.siteName}
           instagramUrl={settings.instagramUrl}
         />

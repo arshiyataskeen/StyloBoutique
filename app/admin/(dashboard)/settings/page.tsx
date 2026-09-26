@@ -121,20 +121,46 @@ export default function AdminSettingsPage() {
               </p>
             </div>
             <div>
-              <label className="mb-1 block text-sm">Shop phone (optional)</label>
+              <label className="mb-1 block text-sm">
+                Shop phone <span className="text-accent">*</span>
+              </label>
               <input
                 value={settings.shopPhone ?? ""}
                 onChange={(e) => setSettings({ ...settings, shopPhone: e.target.value })}
                 placeholder="e.g. +91 98765 43210"
+                required
                 className="w-full rounded-lg border border-border bg-background px-3 py-2 outline-none focus:border-accent"
               />
+              <p className="mt-1 text-xs text-muted">
+                Shown in the footer and used by the &quot;Call us&quot; button.
+              </p>
             </div>
             <div>
-              <label className="mb-1 block text-sm">Instagram (optional)</label>
+              <label className="mb-1 block text-sm">
+                WhatsApp number <span className="text-accent">*</span>
+              </label>
+              <input
+                value={settings.whatsappNumber ?? ""}
+                onChange={(e) => setSettings({ ...settings, whatsappNumber: e.target.value })}
+                placeholder="e.g. +91 91234 56780"
+                required
+                className="w-full rounded-lg border border-border bg-background px-3 py-2 outline-none focus:border-accent"
+              />
+              <p className="mt-1 text-xs text-muted">
+                Where WhatsApp messages go — including every &quot;Ask price&quot; button. Can be a
+                different line from the shop phone above. A 10-digit Indian number gets +91 added
+                automatically.
+              </p>
+            </div>
+            <div>
+              <label className="mb-1 block text-sm">
+                Instagram <span className="text-accent">*</span>
+              </label>
               <input
                 value={settings.instagramUrl ?? ""}
                 onChange={(e) => setSettings({ ...settings, instagramUrl: e.target.value })}
                 placeholder="@yourshop"
+                required
                 className="w-full rounded-lg border border-border bg-background px-3 py-2 outline-none focus:border-accent"
               />
               <p className="mt-1 text-xs text-muted">

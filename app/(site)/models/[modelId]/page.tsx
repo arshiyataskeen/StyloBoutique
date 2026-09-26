@@ -22,5 +22,11 @@ export default async function ModelDetailPage({
 
   if (!model) notFound();
 
-  return <ModelDetail model={model} phone={settings.shopPhone} siteName={settings.siteName} />;
+  return (
+    <ModelDetail
+      model={model}
+      whatsapp={settings.whatsappNumber || settings.shopPhone}
+      siteName={settings.siteName}
+    />
+  );
 }
