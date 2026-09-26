@@ -36,7 +36,7 @@ export default async function CategoryPage({
   const { category, models } = data;
 
   return (
-    <div className="pb-16">
+    <div className="pb-10 sm:pb-16">
       <PageHeader
         title={category.name}
         description={category.description}
@@ -46,7 +46,9 @@ export default async function CategoryPage({
 
       <div className="mx-auto max-w-6xl px-5 py-8 sm:py-12">
         {models.length === 0 ? (
-          <div className="py-12 text-center">
+          // No inner padding: the wrapper above already provides it, and
+          // stacking the two left a conspicuous empty band under the header.
+          <div className="text-center">
             <p className="font-serif text-2xl">Coming soon</p>
             <p className="mt-2 text-sm text-muted">
               We&apos;re photographing our {category.name.toLowerCase()} designs now. In the

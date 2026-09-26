@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import ImageUploader from "@/components/admin/ImageUploader";
+import MediaUploader from "@/components/admin/MediaUploader";
 import {
   PRICE_DISPLAYS,
   PRICE_DISPLAY_HINTS,
@@ -46,6 +47,24 @@ export default function ModelForm({
   submitLabel?: string;
 }) {
   const [values, setValues] = useState<ModelFormValues>({ ...EMPTY, ...initialValues });
+
+  /**
+   * The database stores one ordered `images` array whose first entry is the
+   * cover — that is what the catalog tile and the booking summary read. The
+   * form splits that in two so the cover is an explicit choice rather than
+   * something you have to remember to drag into first place.
+   *
+   * Clearing the cover promotes the first gallery photo, which is simply what
+   * "first in the array" already means everywhere else.
+   */
+  const cover = values.images[0] ?? "";
+  const gallery = values.images.slice(1);
+
+  const setCover = (url: string) =>
+    setValues({ ...values, images: url ? [url, ...gallery] : gallery });
+
+  const setGallery = (next: string[]) =>
+    setValues({ ...values, images: cover ? [cover, ...next] : next });
   const [categories, setCategories] = useState<CategoryDTO[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -153,14 +172,30 @@ export default function ModelForm({
         </p>
       </div>
 
-      <div>
-        <label className="mb-1 block text-sm">Photos</label>
-        <ImageUploader
-          images={values.images}
-          onChange={(images) => setValues({ ...values, images })}
-          kind="model-image"
-          hint="Add as many as you like — front, back, neckline, fabric detail. The first is the cover shown in the catalog."
-        />
+      <div className="grid gap-5 md:grid-cols-2">
+        <div>
+          <label className="mb-1 block text-sm">Cover photo</label>
+          <MediaUploader
+            kind="model-image"
+            accept="image/png,image/jpeg,image/webp,image/avif"
+            value={cover}
+            onChange={setCover}
+          />
+          <p className="mt-1 text-xs text-muted">
+            The one photo shown on the catalog tile and as the main image on the design page. Pick
+            the clearest full view of the piece.
+          </p>
+        </div>
+
+        <div>
+          <label className="mb-1 block text-sm">Gallery photos</label>
+          <ImageUploader
+            images={gallery}
+            onChange={setGallery}
+            kind="model-image"
+            hint="The other views — back, neckline, fabric detail. Shown in a grid under the design."
+          />
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-6">

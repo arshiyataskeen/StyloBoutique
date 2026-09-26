@@ -1,17 +1,32 @@
 import { ArrowUpRight } from "lucide-react";
+import { prisma } from "@/lib/prisma";
 import ContactForm from "@/components/public/ContactForm";
 import FadeIn from "@/components/public/FadeIn";
 import FeedbackButton from "@/components/public/FeedbackButton";
 import InstagramIcon from "@/components/public/InstagramIcon";
+import Testimonials from "@/components/public/Testimonials";
 import { getSiteSettings } from "@/lib/settings";
 import { parseInstagram } from "@/lib/instagram";
+
+export const dynamic = "force-dynamic";
 
 export default async function ContactPage({
   searchParams,
 }: {
   searchParams: Promise<{ about?: string }>;
 }) {
-  const [settings, { about }] = await Promise.all([getSiteSettings(), searchParams]);
+  // Approved reviews sit on this page now rather than the gallery, so the
+  // reviews and the form that collects them are in one place.
+  const [settings, { about }, feedback] = await Promise.all([
+    getSiteSettings(),
+    searchParams,
+    prisma.feedback.findMany({
+      where: { status: "Approved" },
+      orderBy: { createdAt: "desc" },
+      take: 12,
+      select: { id: true, name: true, message: true, rating: true, createdAt: true },
+    }),
+  ]);
   const instagram = parseInstagram(settings.instagramUrl);
 
   return (
@@ -47,9 +62,11 @@ export default async function ContactPage({
             href={instagram.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="group flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-border bg-surface p-5 transition-colors hover:border-accent sm:p-6"
+            // No flex-wrap: the text is wide enough that the arrow was being
+            // pushed onto a line of its own, stranded under the paragraph.
+            className="group flex items-center justify-between gap-4 rounded-2xl border border-border bg-surface p-5 transition-colors hover:border-accent sm:p-6"
           >
-            <div className="flex items-center gap-4">
+            <div className="flex min-w-0 items-center gap-4">
               <span
                 className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white"
                 style={{
@@ -67,8 +84,16 @@ export default async function ContactPage({
                 </p>
               </div>
             </div>
-            <ArrowUpRight className="h-5 w-5 text-muted transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-accent" />
+            <ArrowUpRight className="h-5 w-5 shrink-0 text-muted transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-accent" />
           </a>
+        </FadeIn>
+      )}
+
+      {/* Only once there is something to show — an empty "no reviews yet" band
+          above the footer is the gap this was meant to remove. */}
+      {feedback.length > 0 && (
+        <FadeIn delay={0.35} className="mt-10">
+          <Testimonials feedback={feedback} bare />
         </FadeIn>
       )}
     </div>

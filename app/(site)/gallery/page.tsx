@@ -2,24 +2,19 @@ import { prisma } from "@/lib/prisma";
 import PageHeader from "@/components/public/PageHeader";
 import SlowFadeStack from "@/components/public/SlowFadeStack";
 import CylinderGallery from "@/components/public/CylinderGallery";
-import Testimonials from "@/components/public/Testimonials";
 import { getSiteSettings } from "@/lib/settings";
 
 export const dynamic = "force-dynamic";
 
+// Customer reviews live on the Contact page, beside the form that collects
+// them, rather than being repeated here.
 async function getGalleryData() {
-  const [models, settings, feedback] = await Promise.all([
+  const [models, settings] = await Promise.all([
     prisma.model.findMany({
       where: { isActive: true, images: { isEmpty: false } },
       select: { images: true },
     }),
     getSiteSettings(),
-    prisma.feedback.findMany({
-      where: { status: "Approved" },
-      orderBy: { createdAt: "desc" },
-      take: 12,
-      select: { id: true, name: true, message: true, rating: true, createdAt: true },
-    }),
   ]);
 
   const designPhotos = models.flatMap((m) => m.images);
@@ -31,17 +26,17 @@ async function getGalleryData() {
     [all[i], all[j]] = [all[j], all[i]];
   }
 
-  return { images: all, feedback };
+  return { images: all };
 }
 
 export default async function GalleryPage() {
-  const { images, feedback } = await getGalleryData();
+  const { images } = await getGalleryData();
 
   return (
-    <div className="pb-16">
+    <div className="pb-10 sm:pb-16">
       <PageHeader
         title="Gallery"
-        description="Pieces we've cut, stitched and embroidered — and what our customers say about them."
+        description="Pieces we've cut, stitched and embroidered."
         bordered
       />
 
@@ -69,7 +64,6 @@ export default async function GalleryPage() {
         </p>
       )}
 
-      <Testimonials feedback={feedback} />
     </div>
   );
 }

@@ -42,7 +42,15 @@ export default function PageHeader({
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={image!} alt="" className="h-full w-full object-cover" />
           </motion.div>
-          <div className="absolute inset-0 -z-10 bg-gradient-to-t from-black/90 via-black/65 to-black/45" />
+          {/*
+            Two scrims, because one was not enough. A bottom-up gradient alone
+            leaves the top of the image at its brightest — which is exactly
+            where the title sits, so white text landed on pale fabric and
+            disappeared. The second darkens the left, where all the text is,
+            while the right stays clear enough to read the photograph.
+          */}
+          <div className="absolute inset-0 -z-10 bg-gradient-to-t from-black/85 via-black/60 to-black/55" />
+          <div className="absolute inset-0 -z-10 bg-gradient-to-r from-black/70 via-black/30 to-transparent" />
         </>
       ) : (
         <>
@@ -58,10 +66,19 @@ export default function PageHeader({
       )}
 
       <div
-        className={`relative mx-auto max-w-6xl px-5 ${hasImage ? "py-16 sm:py-24" : "py-10 sm:py-14"}`}
+        className={`relative mx-auto max-w-6xl px-5 ${hasImage ? "py-14 sm:py-20" : "py-10 sm:py-14"}`}
       >
+        {/*
+          One size per breakpoint. This previously carried both sm:text-4xl and
+          sm:text-5xl, and which of the two won came down to their order in the
+          generated stylesheet rather than anything written here.
+        */}
         <h1
-          className={`font-serif text-3xl sm:text-4xl ${hasImage ? "text-white sm:text-5xl" : ""}`}
+          className={
+            hasImage
+              ? "font-serif text-3xl text-white drop-shadow-sm sm:text-5xl"
+              : "font-serif text-3xl sm:text-4xl"
+          }
         >
           <RevealText text={title} />
         </h1>

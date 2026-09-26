@@ -1,13 +1,13 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Upload, X, Loader2, ChevronLeft, ChevronRight, Star } from "lucide-react";
+import { Upload, X, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 
 export default function ImageUploader({
   images,
   onChange,
   kind = "site-image",
-  hint = "The first photo is used as the cover.",
+  hint = "Add as many as you like.",
 }: {
   images: string[];
   onChange: (images: string[]) => void;
@@ -72,12 +72,6 @@ export default function ImageUploader({
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={url} alt="" className="h-full w-full object-cover" />
-
-            {i === 0 && (
-              <span className="absolute left-1 top-1 flex items-center gap-1 rounded-full bg-accent px-2 py-0.5 text-[9px] font-medium uppercase tracking-wide text-white">
-                <Star className="h-2.5 w-2.5" fill="currentColor" /> Cover
-              </span>
-            )}
 
             <button
               type="button"

@@ -49,6 +49,38 @@ async function copy() {
     );
   }
 
+  /**
+   * Refuse when production is ahead of this machine.
+   *
+   * This script existed to lift a locally-built site into an empty production
+   * database. Once the owner starts adding categories, designs and photos
+   * through the live admin panel, production is the newer copy — and pushing
+   * over it would quietly undo their work. Local has no record of a category
+   * added online, so "copy local over production" stops meaning what it says.
+   */
+  const [liveCategories, localCategories, liveModels, localModels] = await Promise.all([
+    neon.category.count(),
+    local.category.count(),
+    neon.model.count(),
+    local.model.count(),
+  ]);
+
+  const ahead: string[] = [];
+  if (liveCategories > localCategories) {
+    ahead.push(`${liveCategories} categories in production vs ${localCategories} here`);
+  }
+  if (liveModels > localModels) {
+    ahead.push(`${liveModels} designs in production vs ${localModels} here`);
+  }
+
+  if (ahead.length && process.env.FORCE !== "1") {
+    throw new Error(
+      `Production has content this machine does not:\n` +
+        ahead.map((line) => `  - ${line}`).join("\n") +
+        `\n\nCopying would overwrite it. If you are certain, re-run with FORCE=1.`
+    );
+  }
+
   // 1. Branding, hero media, gallery, stats, section wording.
   const settings = await local.siteSettings.findUnique({ where: { id: "main" } });
   if (settings) {

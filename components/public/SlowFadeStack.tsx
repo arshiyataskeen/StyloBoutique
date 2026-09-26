@@ -32,12 +32,16 @@ export default function SlowFadeStack({ images }: { images: string[] }) {
           alt=""
           loading="lazy"
           decoding="async"
-          initial={{ opacity: 0, scale: 1.1 }}
-          animate={{ opacity: 1, scale: 1 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          // Long, overlapping cross-fade with a slow zoom — the "slow motion".
-          transition={{ opacity: { duration: 1.6, ease: EASE }, scale: { duration: 7, ease: "linear" } }}
-          className="absolute inset-0 h-full w-full object-cover"
+          // The slow zoom this used to have grew the photo past its frame,
+          // which is a crop by another name. The long overlapping fade carries
+          // the "slow motion" on its own.
+          transition={{ opacity: { duration: 1.6, ease: EASE } }}
+          // contain, so the whole garment is visible. These photos carry a logo
+          // in one corner and cover was cutting it, along with the hem.
+          className="absolute inset-0 h-full w-full object-contain"
         />
       </AnimatePresence>
 
