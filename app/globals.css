@@ -1,0 +1,114 @@
+@import "tailwindcss";
+
+:root {
+  --background: #faf7f2;
+  --foreground: #201c18;
+  --surface: #ffffff;
+  --muted: #7a7168;
+  --border: #e7e0d6;
+  --accent: #ea6a12;
+  --accent-foreground: #201c18;
+  /* A touch deeper than --background, for sections that need to read as a
+     distinct band without going dark. */
+  --band: #f3ebe0;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-band: var(--band);
+  --font-sans: var(--font-inter);
+  --font-serif: var(--font-playfair);
+}
+
+body {
+  background: radial-gradient(ellipse 70% 45% at 50% -8%, rgba(234, 106, 18, 0.07), transparent 60%),
+    var(--background);
+  color: var(--foreground);
+  overflow-x: clip;
+  position: relative;
+}
+
+/* iOS Safari zooms the whole page in when a focused field is under 16px, and
+   the zoom is never undone. Sizes below only affect the small screens where
+   that happens; the desktop text-sm styling is untouched. */
+@media (max-width: 767px) {
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
+/* Long unbroken strings (reference codes, pasted URLs, addresses) would
+   otherwise force the layout wider than a phone screen. */
+body {
+  overflow-wrap: break-word;
+}
+
+/* Lenis smooth scroll */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+@keyframes spin-y {
+  from { transform: rotateY(0deg); }
+  to { transform: rotateY(360deg); }
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Gallery photos breathe slowly so the grid never sits completely still.
+   Transform-only, so these composite on the GPU without repainting. */
+@keyframes gallery-drift-a {
+  0%, 100% { transform: scale(1.05) translate(0, 0); }
+  50% { transform: scale(1.13) translate(-1.6%, -1.4%); }
+}
+
+@keyframes gallery-drift-b {
+  0%, 100% { transform: scale(1.11) translate(0.8%, 0.6%); }
+  50% { transform: scale(1.04) translate(-0.6%, -0.8%); }
+}
+
+@keyframes ken-burns {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.1); }
+}
+
+@keyframes bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(6px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
