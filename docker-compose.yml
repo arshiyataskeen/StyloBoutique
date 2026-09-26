@@ -1,0 +1,36 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: stylo
+      POSTGRES_PASSWORD: stylo
+      POSTGRES_DB: stylo
+    ports:
+      - "5432:5432"
+    volumes:
+      - stylo_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U stylo -d stylo"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://stylo:stylo@postgres:5432/stylo?schema=public
+      ADMIN_KEY: ${ADMIN_KEY:-change-this-to-a-long-random-secret}
+      JWT_SECRET: ${JWT_SECRET:-change-this-to-a-different-long-random-secret}
+    ports:
+      - "3000:3000"
+    volumes:
+      - stylo_uploads:/app/public/uploads
+
+volumes:
+  stylo_postgres_data:
+  stylo_uploads:

@@ -1,0 +1,158 @@
+# Deploying to Vercel
+
+Written for whoever is putting this site live. Follow it top to bottom.
+
+---
+
+## Before you start: one thing does not work on Vercel
+
+**Uploading photos through the admin panel will fail once deployed.**
+
+`app/api/admin/upload/route.ts` writes files into `public/uploads/`. On your own
+machine and in Docker that is a real folder. On Vercel the filesystem is
+read-only, and anything written during a request is thrown away when that
+request ends — so an uploaded photo either errors or vanishes.
+
+Everything else works: the photos already in `public/media/` are part of the
+repo and will serve normally, and every other admin screen (categories,
+designs, prices, bookings, feedback, site content) is database-backed and fine.
+
+You have three options:
+
+1. **Deploy now, add photos later.** The site is fully usable; you just cannot
+   add a *new* photo from the admin panel yet. Good if you want it live today.
+2. **Put new photos in `public/media/` yourself** and push to GitHub. Works, but
+   needs a redeploy for each batch.
+3. **Switch uploads to Vercel Blob** — the proper fix, about an hour of work.
+   Ask and it can be done before you deploy.
+
+---
+
+## Step 1 — Get a hosted database
+
+Docker Postgres only exists on your machine. Vercel needs a database on the
+internet. Any Postgres works; **Neon** has a free tier and suits this well.
+
+1. Go to your Vercel dashboard → **Storage** → **Create Database** → **Neon
+   (Postgres)**.
+2. Once created, open it and copy the connection string. Take the one labelled
+   **pooled** / containing `-pooler`.
+
+> **Take the pooled string, not the direct one.** Every page here is
+> server-rendered, so each visitor request opens a database connection. Without
+> pooling a busy moment exhausts the connection limit and pages start failing.
+
+Keep both strings to hand — you need the direct one once, in step 4.
+
+## Step 2 — Push to GitHub
+
+Already cleaned up for you. `.gitignore` correctly excludes `node_modules`,
+`.next`, `.env.local` and the generated Prisma client.
+
+Confirm your secrets are **not** about to be committed:
+
+```bash
+git status --porcelain | findstr ".env.local"
+```
+
+That must print nothing. Then push as normal.
+
+## Step 3 — Import into Vercel
+
+1. Vercel dashboard → **Add New** → **Project** → pick the GitHub repo.
+2. Framework preset: **Next.js** (it will detect this).
+3. Leave the build and output settings alone — the defaults are right.
+4. **Do not deploy yet.** Add the environment variables first (step 4),
+   otherwise the first build fails and you just have to redo it.
+
+## Step 4 — Environment variables
+
+In **Settings → Environment Variables**, add these for *Production* (and
+*Preview*, if you want preview deployments to work):
+
+| Variable | Value |
+|---|---|
+| `DATABASE_URL` | The **pooled** connection string from step 1 |
+| `ADMIN_KEY` | A long random secret — this is the admin panel password |
+| `JWT_SECRET` | A **different** long random secret |
+| `SITE_URL` | `https://your-project.vercel.app` (update after you add a domain) |
+| `SMTP_USER` | Your Gmail address, for booking alerts |
+| `SMTP_PASS` | A Gmail **App Password**, not your normal password |
+| `SMTP_HOST` | `smtp.gmail.com` |
+| `SMTP_PORT` | `465` |
+
+The SMTP four are optional — leave them out and the site works fine, you just
+get no email alerts.
+
+To generate the two secrets:
+
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"
+```
+
+Run it twice. **Change `ADMIN_KEY` from whatever is in your `.env.local`** —
+that value has been in a chat log and on your screen, so treat it as burned.
+
+## Step 5 — Create the tables
+
+The database from step 1 is empty. Run the migrations against it **once**, from
+your own machine, using the **direct** (non-pooled) connection string:
+
+```powershell
+$env:DATABASE_URL = "postgresql://...direct connection string..."
+npx prisma migrate deploy
+```
+
+`migrate deploy` only applies existing migrations — it never invents or drops
+anything, so it is safe to run against a real database.
+
+> Use the direct string here, not the pooled one. Schema changes do not work
+> reliably through a connection pooler.
+
+## Step 6 — Deploy
+
+Hit **Deploy**. The build runs `prisma generate` automatically via the
+`postinstall` script, then `next build`.
+
+If the build fails with *"Cannot find module '@/lib/generated/prisma/client'"*,
+the `postinstall` script is missing from `package.json` — it must be there.
+
+## Step 7 — Set the site up
+
+1. Open `https://your-project.vercel.app/admin/login` and sign in with your
+   `ADMIN_KEY`.
+2. The site starts empty. Add your categories and designs, or run the seed
+   script against the production database from your machine:
+
+   ```powershell
+   $env:DATABASE_URL = "postgresql://...direct connection string..."
+   npm run seed
+   ```
+
+3. In **Admin → Site Content**, set the Instagram handle and the email alert
+   address.
+
+## Step 8 — Your own domain
+
+1. Vercel → **Settings → Domains** → add it, and follow the DNS instructions.
+2. Update `SITE_URL` to the real domain and redeploy, so WhatsApp and Facebook
+   link previews and the Google listing point at the right place.
+
+---
+
+## If something goes wrong
+
+**Build fails on Prisma** — check `postinstall: prisma generate` is in
+`package.json`.
+
+**Pages load but data is missing** — the app is talking to a database with no
+tables. Re-run step 5 and check `DATABASE_URL` in Vercel matches the database
+you migrated.
+
+**Intermittent "too many connections"** — you used the direct connection string
+in Vercel instead of the pooled one. Swap it in `DATABASE_URL` and redeploy.
+
+**Admin login rejects the key** — `ADMIN_KEY` in Vercel does not match what you
+are typing. Environment variable changes need a redeploy to take effect.
+
+**Photo upload errors** — expected; see the note at the top.

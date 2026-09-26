@@ -1,0 +1,167 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum BookingStatus {
+  Pending
+  Confirmed
+  InProgress
+  Ready
+  Completed
+  Cancelled
+}
+
+enum QueryStatus {
+  New
+  Responded
+  Closed
+}
+
+enum HeroMediaType {
+  Video
+  Image
+}
+
+enum FeedbackStatus {
+  Pending
+  Approved
+  Hidden
+}
+
+/// How a design's price is shown to visitors.
+/// Exact  — "₹2,500"          (the figure as entered)
+/// From   — "From ₹2,500"     (a starting point; fabric and work vary)
+/// Hidden — "Price on request" plus an ask button. The price is still stored,
+///          so the owner keeps their own reference and can switch back.
+enum PriceDisplay {
+  Exact
+  From
+  Hidden
+}
+
+/// Customer feedback. Submitted publicly, so nothing is shown on the site
+/// until the owner approves it.
+model Feedback {
+  id        String         @id @default(cuid())
+  name      String
+  message   String
+  rating    Int?
+  status    FeedbackStatus @default(Pending)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  @@index([status, createdAt])
+}
+
+model SiteSettings {
+  id             String        @id @default("main")
+  logoUrl        String?
+  siteName       String        @default("Stylo Tailor")
+  heroMediaType  HeroMediaType @default(Video)
+  heroVideoUrl   String?       @default("/video/hero-bg.mp4")
+  heroPosterUrl  String?       @default("/video/hero-poster.jpg")
+  heroImageUrl   String?
+  heroTagline    String        @default("Custom Tailoring")
+  heroHeading    String        @default("Garments cut to your exact measure.")
+  heroSubheading String        @default("Browse our catalog of made-to-measure designs, book a fitting in minutes, and track your order — no account needed.")
+  footerTagline  String        @default("Made-to-measure tailoring, crafted for you.")
+  shopAddress    String?       @default("Pindi Mara, Beside Cement Road, 4 Pillars, Vijayawada")
+  shopPhone      String?
+  /// Full Instagram profile URL, e.g. https://instagram.com/yourshop
+  instagramUrl   String?
+  aboutHeading   String        @default("About Us")
+  aboutText      String        @default("We're a family-run tailoring studio dedicated to garments that fit exactly right. Every piece is cut and stitched by hand to your own measurements — no mass production, no guesswork.")
+  galleryImages  String[]      @default([])
+
+  /// [{ "value": "15+", "label": "Years of Craft" }] — shown in the homepage stats band.
+  stats          Json          @default("[]")
+  /// Ordered list of homepage section keys. Empty means "use the built-in order".
+  homeSections   String[]      @default([])
+  /// Per-section headings and card copy. Missing keys fall back to the defaults.
+  sectionContent Json          @default("{}")
+  /// Where new-booking and new-enquiry alerts are sent. Empty disables alerts.
+  notifyEmail    String?
+  /// Gmail address alerts are sent FROM.
+  smtpUser       String?
+  /// Gmail App Password. Secret: never returned by any API — see lib/settings.ts.
+  smtpPass       String?
+
+  updatedAt      DateTime      @updatedAt
+}
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  /// Cover photo for the catalog tile. Falls back to a design's photo when empty.
+  imageUrl    String?
+  displayOrder Int     @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  models   Model[]
+  bookings Booking[]
+}
+
+model Model {
+  id           String   @id @default(cuid())
+  name         String
+  categoryId   String
+  category     Category @relation(fields: [categoryId], references: [id])
+  description  String
+  price        Float
+  priceNote    String?
+  /// Defaults to Exact so existing designs keep showing what they show today.
+  priceDisplay PriceDisplay @default(Exact)
+  images       String[] @default([])
+  isActive     Boolean  @default(true)
+  isFeatured   Boolean  @default(false)
+  displayOrder Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  bookings Booking[]
+
+  @@index([categoryId])
+  @@index([isActive, isFeatured])
+}
+
+model Booking {
+  id                  String        @id @default(cuid())
+  refCode             String        @unique
+  customerName        String
+  phone               String
+  email               String?
+  modelId             String?
+  model               Model?        @relation(fields: [modelId], references: [id])
+  categoryId          String?
+  category            Category?     @relation(fields: [categoryId], references: [id])
+  measurementsOrNotes String?
+  preferredDate       DateTime?
+  status              BookingStatus @default(Pending)
+  adminNotes          Json          @default("[]")
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+
+  @@index([phone])
+}
+
+model Query {
+  id         String      @id @default(cuid())
+  refCode    String      @unique
+  name       String
+  phone      String?
+  email      String?
+  message    String
+  status     QueryStatus @default(New)
+  adminNotes Json        @default("[]")
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+}
