@@ -15,7 +15,9 @@
     "db:studio": "prisma studio",
     "seed": "node --env-file=.env.local -r tsx/cjs scripts/seed.ts",
     "db:deploy:neon": "cross-env ENV_FILE=.env.neon prisma migrate deploy",
-    "seed:neon": "node --env-file=.env.neon -r tsx/cjs scripts/seed.ts"
+    "seed:neon": "node --env-file=.env.neon -r tsx/cjs scripts/seed.ts",
+    "copy:neon": "node --env-file=.env.local -r tsx/cjs scripts/copy-to-neon.ts",
+    "check:neon": "node --env-file=.env.neon -r tsx/cjs scripts/check-neon.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.10.0",

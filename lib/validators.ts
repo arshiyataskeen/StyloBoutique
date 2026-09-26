@@ -78,16 +78,24 @@ export const settingsInputSchema = z.object({
   heroSubheading: z.string().trim().min(1).optional(),
   footerTagline: z.string().trim().min(1).optional(),
   shopAddress: z.string().trim().nullish(),
-  shopPhone: z.string().trim().nullish(),
+  // Required: with prices hidden, getting in touch is the only route a visitor
+  // has, so the site must never be left without a way to do it.
+  shopPhone: z.string().trim().min(7, "A shop phone number is required").optional(),
+  whatsappNumber: z
+    .string()
+    .trim()
+    .min(7, "A WhatsApp number is required — it can differ from the shop phone")
+    .optional(),
   // A handle ("@stylo_ladies") or any profile URL is accepted; the API
   // normalises it to a canonical URL before saving.
   instagramUrl: z
     .string()
     .trim()
-    .refine((v) => v === "" || parseInstagram(v) !== null, {
+    .min(1, "An Instagram handle is required")
+    .refine((v) => parseInstagram(v) !== null, {
       message: "Enter your Instagram handle, e.g. @stylo_ladies",
     })
-    .nullish(),
+    .optional(),
   notifyEmail: z.string().trim().email("Enter a valid email").or(z.literal("")).nullish(),
   smtpUser: z.string().trim().email("Enter a valid Gmail address").or(z.literal("")).nullish(),
   smtpPass: z.string().nullish(),

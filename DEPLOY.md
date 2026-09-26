@@ -4,6 +4,60 @@ Written for whoever is putting this site live. Follow it top to bottom.
 
 ---
 
+## What the deployment is made of
+
+Four pieces. Only the first two cost you anything to set up.
+
+```
+   GitHub repo  ──push──▶  Vercel  ──queries──▶  Neon Postgres
+   (161 files,              │                    (all your data:
+    the source)             │                     designs, bookings,
+                            │                     enquiries, feedback,
+                            │                     site settings)
+                            │
+                            ├─▶ CDN: everything in public/
+                            │   logo, hero video, photos
+                            │
+                            └─▶ Serverless functions:
+                                every page + every /api route
+                                        │
+                                        └──▶ Gmail SMTP
+                                             booking / enquiry alerts
+```
+
+**Vercel** rebuilds and redeploys every time you push to GitHub. There is no
+server to restart and nothing to upload by hand.
+
+**Neon** holds all the data. Vercel holds none — a redeploy never touches it, so
+your bookings and designs survive every deployment.
+
+**`public/`** is served straight from Vercel's CDN, not from a function. That is
+why your logo, hero video and photos are fast, and why they must live in the
+repo rather than being uploaded at runtime.
+
+### Build time vs. request time
+
+Knowing which is which explains most deployment failures:
+
+| Phase | What runs | Needs |
+|---|---|---|
+| **Build** | `npm install` → `postinstall: prisma generate` → `next build` | `DATABASE_URL` — the page metadata is generated from the database, so the build reads it |
+| **Every request** | A serverless function renders the page and queries Neon | `DATABASE_URL`, `ADMIN_KEY`, `JWT_SECRET`, `SITE_URL` |
+
+Every page here is `force-dynamic` — rendered per request, never cached — so the
+site reflects an admin change the moment you save it.
+
+### What is deliberately *not* deployed
+
+- **Docker and `docker-compose.yml`** — local development only. Vercel does not
+  use them. They stay in the repo so you can still run Postgres on your machine.
+- **`lib/generated/prisma`** — rebuilt on Vercel by `postinstall`. It is
+  gitignored on purpose; committing it would ship a client built for the wrong
+  platform.
+- **`public/uploads/`** — see the next section.
+
+---
+
 ## Before you start: one thing does not work on Vercel
 
 **Uploading photos through the admin panel will fail once deployed.**

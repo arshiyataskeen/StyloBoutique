@@ -71,7 +71,11 @@ model SiteSettings {
   heroSubheading String        @default("Browse our catalog of made-to-measure designs, book a fitting in minutes, and track your order — no account needed.")
   footerTagline  String        @default("Made-to-measure tailoring, crafted for you.")
   shopAddress    String?       @default("Pindi Mara, Beside Cement Road, 4 Pillars, Vijayawada")
+  /// The number shown to visitors and used by "Call us".
   shopPhone      String?
+  /// The number WhatsApp messages go to — often a different line from the one
+  /// on display, so the two are kept separate.
+  whatsappNumber String?
   /// Full Instagram profile URL, e.g. https://instagram.com/yourshop
   instagramUrl   String?
   aboutHeading   String        @default("About Us")
@@ -118,8 +122,10 @@ model Model {
   description  String
   price        Float
   priceNote    String?
-  /// Defaults to Exact so existing designs keep showing what they show today.
-  priceDisplay PriceDisplay @default(Exact)
+  /// Hidden by default: prices vary too much with fabric and embroidery to put
+  /// a figure on the page, so visitors are asked to get in touch instead. The
+  /// price above is still stored for the owner's own reference.
+  priceDisplay PriceDisplay @default(Hidden)
   images       String[] @default([])
   isActive     Boolean  @default(true)
   isFeatured   Boolean  @default(false)

@@ -95,6 +95,8 @@ export interface SiteSettingsDTO {
   footerTagline: string;
   shopAddress?: string | null;
   shopPhone?: string | null;
+  /** WhatsApp goes to its own number, separate from the one on display. */
+  whatsappNumber?: string | null;
   instagramUrl?: string | null;
   notifyEmail?: string | null;
   smtpUser?: string | null;

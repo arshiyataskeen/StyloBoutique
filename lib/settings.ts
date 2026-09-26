@@ -23,6 +23,7 @@ const PUBLIC_FIELDS = {
   footerTagline: true,
   shopAddress: true,
   shopPhone: true,
+  whatsappNumber: true,
   instagramUrl: true,
   aboutHeading: true,
   aboutText: true,
