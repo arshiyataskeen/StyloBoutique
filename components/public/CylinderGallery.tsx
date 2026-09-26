@@ -5,16 +5,28 @@ import { useEffect, useRef, useState } from "react";
 const GAP = 12;
 
 /**
- * How many panels the helix is made of.
+ * The helix is wound twice rather than once.
  *
- * More than a plain ring wants, because here they are spread over the full
- * height as well as around the axis — so each one has room even though it is
- * narrower.
+ * With a single turn, the panels the viewer can see are always a run of
+ * consecutive ones — and since each is lifted a little above the last, their
+ * heights are consecutive too. The result is a clump of photos at one end of
+ * the frame and nothing at the other, with the rest of the spiral hidden round
+ * the back.
+ *
+ * Two turns means the near face shows panels from both, so what you see is
+ * spread down the whole height at every moment of the rotation.
  */
-function panelCount(width: number) {
-  if (width < 420) return 9;
-  if (width < 640) return 12;
-  return 14;
+const TURNS = 2;
+
+/**
+ * Distinct angular positions around the axis. The panel count is this times
+ * TURNS, and this — not the panel count — is what sets the radius, because
+ * panels one turn apart sit at the same angle.
+ */
+function positionsAround(width: number) {
+  if (width < 420) return 5;
+  if (width < 640) return 6;
+  return 7;
 }
 
 /**
@@ -69,8 +81,11 @@ export default function CylinderGallery({ images }: { images: string[] }) {
   // Fall back to a phone-sized turn for the first paint, before measuring.
   const width = box.width || 320;
   const height = box.height || width * 1.25;
-  const count = panelCount(width);
-  const cardW = panelWidth(width, count);
+  const around = positionsAround(width);
+  const count = around * TURNS;
+  // Sized from the angular positions, not the panel count: two panels a turn
+  // apart occupy the same slice of the circle, so they do not each need room.
+  const cardW = panelWidth(width, around);
   // Roughly 3:4, which is what the shop's photos are. Since the images are
   // contained rather than cropped, a panel far from their own shape would just
   // be empty space around a small picture.
@@ -81,8 +96,10 @@ export default function CylinderGallery({ images }: { images: string[] }) {
   const climb = Math.max(0, height - cardH - 24);
 
   const panels = Array.from({ length: count }, (_, i) => images[i % images.length]);
-  const angle = 360 / count;
-  const radius = Math.round((cardW + GAP) / 2 / Math.tan(Math.PI / count));
+  // Two full turns across the whole set, so consecutive panels are a wide step
+  // apart around the axis as well as a small step up it.
+  const angle = (360 * TURNS) / count;
+  const radius = Math.round((cardW + GAP) / 2 / Math.tan(Math.PI / around));
 
   return (
     <div
