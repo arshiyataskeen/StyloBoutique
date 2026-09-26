@@ -58,18 +58,37 @@ async function copy() {
 
     // Prisma reads JSON columns as JsonValue (which admits null) but only
     // accepts InputJsonValue on write, so these two need narrowing.
-    const data = {
+    const data: Record<string, unknown> = {
       ...rest,
       stats: (stats ?? []) as Prisma.InputJsonValue,
       sectionContent: (sectionContent ?? {}) as Prisma.InputJsonValue,
     };
 
+    // A blank field locally must never erase a real value in production. The
+    // owner configures contact details and credentials in the live admin panel,
+    // where this machine's copy is usually empty — overwriting them with blanks
+    // once silently removed a published Instagram handle.
+    const existing = await neon.siteSettings.findUnique({ where: { id: "main" } });
+    const kept: string[] = [];
+    if (existing) {
+      for (const [key, value] of Object.entries(data)) {
+        const isBlank = value === null || value === undefined || value === "";
+        const liveValue = (existing as Record<string, unknown>)[key];
+        const liveHasValue = liveValue !== null && liveValue !== undefined && liveValue !== "";
+        if (isBlank && liveHasValue) {
+          delete data[key];
+          kept.push(key);
+        }
+      }
+    }
+
     await neon.siteSettings.upsert({
       where: { id: "main" },
       update: data,
-      create: { id: "main", ...data },
+      create: { id: "main", ...(data as Prisma.SiteSettingsUncheckedCreateInput) },
     });
     console.log("site settings :", settings.siteName, "· logo", settings.logoUrl);
+    if (kept.length) console.log("  kept in production (blank here):", kept.join(", "));
   }
 
   // 2. Categories, matched on slug so re-running updates rather than duplicates.
