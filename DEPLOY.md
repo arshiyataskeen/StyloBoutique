@@ -76,13 +76,11 @@ In **Settings → Environment Variables**, add these for *Production* (and
 | `ADMIN_KEY` | A long random secret — this is the admin panel password |
 | `JWT_SECRET` | A **different** long random secret |
 | `SITE_URL` | `https://your-project.vercel.app` (update after you add a domain) |
-| `SMTP_USER` | Your Gmail address, for booking alerts |
-| `SMTP_PASS` | A Gmail **App Password**, not your normal password |
-| `SMTP_HOST` | `smtp.gmail.com` |
-| `SMTP_PORT` | `465` |
-
-The SMTP four are optional — leave them out and the site works fine, you just
-get no email alerts.
+**Leave the SMTP variables out.** Email alerts are configured in the admin
+panel instead — **Admin → Site Content → Email alerts** — and what is saved
+there takes priority over any env var. The host and port default to Gmail's in
+code, and the recipient address has no env var at all, so setting them here
+would not switch alerts on anyway. See step 7.
 
 To generate the two secrets:
 
@@ -129,8 +127,15 @@ the `postinstall` script is missing from `package.json` — it must be there.
    npm run seed
    ```
 
-3. In **Admin → Site Content**, set the Instagram handle and the email alert
-   address.
+3. In **Admin → Site Content**, set the Instagram handle.
+
+4. Still in Site Content, open **Email alerts** and fill in all three:
+   **Send alerts to** (where bookings and enquiries are emailed), **Send from**
+   (your Gmail address) and the **Gmail App Password** — Google Account →
+   Security → 2-Step Verification → App passwords, not your login password.
+   Save, then hit **Send test email**; it reports success or the exact failure.
+
+   Alerts stay off until "Send alerts to" has a value, whatever else is set.
 
 ## Step 8 — Your own domain
 
