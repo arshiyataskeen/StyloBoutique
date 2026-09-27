@@ -12,8 +12,9 @@ const SPEED = 38;
 
 function Card({ model }: { model: ModelDTO }) {
   const image = model.images[0];
-  /** Shape of this card's cover, once it has loaded. 4:5 until then. */
-  const [ratio, setRatio] = useState(0.8);
+  // 3:2 to start with, which is what the shop's covers are — so the card is
+  // the right height from the first paint rather than settling into it.
+  const [ratio, setRatio] = useState(1.5);
 
   return (
     <Link
@@ -151,7 +152,10 @@ export default function FeaturedMarquee({ models }: { models: ModelDTO[] }) {
             "linear-gradient(to right, transparent, #000 6%, #000 94%, transparent)",
         }}
       >
-        <div className="flex w-max gap-4 px-5">
+        {/* items-start, not the flex default of stretch: every card was being
+            pulled to the height of the tallest, so one cover that had not
+            measured yet left white space under all the others. */}
+        <div className="flex w-max items-start gap-4 px-5">
           {[...half, ...half].map((model, i) => (
             <Card key={`${model.id}-${i}`} model={model} />
           ))}
