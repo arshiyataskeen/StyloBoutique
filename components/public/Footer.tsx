@@ -89,19 +89,27 @@ export default function Footer({
 
         <div>
           <p className="text-xs font-medium uppercase tracking-[0.15em] text-muted">Explore</p>
-          <div className="mt-4 flex flex-col gap-2.5 text-sm text-foreground/80">
-            <Link href="/catalog" className="w-fit transition-transform hover:translate-x-1 hover:text-accent">
-              Catalog
-            </Link>
-            <Link href="/book" className="w-fit transition-transform hover:translate-x-1 hover:text-accent">
-              Book a Fitting
-            </Link>
-            <Link href="/track" className="w-fit transition-transform hover:translate-x-1 hover:text-accent">
-              Track Order
-            </Link>
-            <Link href="/contact" className="w-fit transition-transform hover:translate-x-1 hover:text-accent">
-              Contact
-            </Link>
+          {/*
+            A row on a phone, a column from sm up. Four links stacked put four
+            lines of almost nothing between the shop details and the bottom of
+            a small screen; across, they take one. The sideways nudge on hover
+            only makes sense in the column, so it is scoped to that.
+          */}
+          <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm text-foreground/80 sm:flex-col sm:gap-2.5">
+            {[
+              { href: "/catalog", label: "Catalog" },
+              { href: "/book", label: "Book a Fitting" },
+              { href: "/track", label: "Track Order" },
+              { href: "/contact", label: "Contact" },
+            ].map(({ href, label }) => (
+              <Link
+                key={href}
+                href={href}
+                className="w-fit transition-all hover:text-accent sm:hover:translate-x-1"
+              >
+                {label}
+              </Link>
+            ))}
           </div>
         </div>
       </div>

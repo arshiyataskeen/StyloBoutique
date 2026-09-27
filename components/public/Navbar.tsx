@@ -13,6 +13,7 @@ const LINKS = [
   { href: "/catalog", label: "Catalog" },
   { href: "/book", label: "Book" },
   { href: "/track", label: "Track Order" },
+  { href: "/reviews", label: "Reviews" },
   { href: "/contact", label: "Contact" },
 ];
 

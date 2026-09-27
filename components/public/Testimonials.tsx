@@ -22,30 +22,37 @@ export default function Testimonials({
    * gave two identical buttons a screen apart.
    */
   bare = false,
+  /** Hides the built-in heading, for a page whose own title already says it. */
+  headless = false,
 }: {
   feedback: FeedbackItem[];
   bare?: boolean;
+  headless?: boolean;
 }) {
   return (
     <section
       className={bare ? "" : "border-t border-border/80 bg-band py-10 sm:py-14"}
     >
       <div className={bare ? "" : "mx-auto max-w-6xl px-5"}>
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-accent">Kind Words</p>
-            <h2 className="mt-2 font-serif text-2xl sm:text-3xl">What our customers say</h2>
+        {!headless && (
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <p className="text-xs uppercase tracking-[0.2em] text-accent">Kind Words</p>
+              <h2 className="mt-2 font-serif text-2xl sm:text-3xl">What our customers say</h2>
+            </div>
+            {!bare && <FeedbackButton />}
           </div>
-          {!bare && <FeedbackButton />}
-        </div>
+        )}
 
         {feedback.length === 0 ? (
-          <p className="mt-8 text-sm text-muted">
+          <p className={`text-sm text-muted ${headless ? "" : "mt-8"}`}>
             No reviews yet — if we&apos;ve stitched something for you, we&apos;d love to hear how it turned out.
           </p>
         ) : (
           <div
-            className={`mt-8 grid gap-5 sm:grid-cols-2 ${bare ? "" : "lg:grid-cols-3"}`}
+            className={`grid gap-5 sm:grid-cols-2 ${headless ? "" : "mt-8"} ${
+              bare ? "" : "lg:grid-cols-3"
+            }`}
           >
             {feedback.map((item, i) => (
               <motion.figure

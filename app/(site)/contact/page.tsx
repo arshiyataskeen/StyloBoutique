@@ -1,10 +1,9 @@
+import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
-import { prisma } from "@/lib/prisma";
 import ContactForm from "@/components/public/ContactForm";
 import FadeIn from "@/components/public/FadeIn";
 import FeedbackButton from "@/components/public/FeedbackButton";
 import InstagramIcon from "@/components/public/InstagramIcon";
-import Testimonials from "@/components/public/Testimonials";
 import { getSiteSettings } from "@/lib/settings";
 import { parseInstagram } from "@/lib/instagram";
 
@@ -15,18 +14,9 @@ export default async function ContactPage({
 }: {
   searchParams: Promise<{ about?: string }>;
 }) {
-  // Approved reviews sit on this page now rather than the gallery, so the
-  // reviews and the form that collects them are in one place.
-  const [settings, { about }, feedback] = await Promise.all([
-    getSiteSettings(),
-    searchParams,
-    prisma.feedback.findMany({
-      where: { status: "Approved" },
-      orderBy: { createdAt: "desc" },
-      take: 12,
-      select: { id: true, name: true, message: true, rating: true, createdAt: true },
-    }),
-  ]);
+  // No reviews query here any more — they have their own page, which the
+  // feedback card links to.
+  const [settings, { about }] = await Promise.all([getSiteSettings(), searchParams]);
   const instagram = parseInstagram(settings.instagramUrl);
 
   return (
@@ -49,7 +39,11 @@ export default async function ContactPage({
           <div>
             <h2 className="font-serif text-xl">Already had something stitched?</h2>
             <p className="mt-1 text-sm text-muted">
-              Tell us how it turned out — it helps other customers decide.
+              Tell us how it turned out — it helps other customers decide.{" "}
+              <Link href="/reviews" className="text-accent hover:underline">
+                Read what others said
+              </Link>
+              .
             </p>
           </div>
           <FeedbackButton />
@@ -89,13 +83,9 @@ export default async function ContactPage({
         </FadeIn>
       )}
 
-      {/* Only once there is something to show — an empty "no reviews yet" band
-          above the footer is the gap this was meant to remove. */}
-      {feedback.length > 0 && (
-        <FadeIn delay={0.35} className="mt-10">
-          <Testimonials feedback={feedback} bare />
-        </FadeIn>
-      )}
+      {/* The reviews themselves live on /reviews now, which the card above
+          links to. Repeating the full list here would mean two places to keep
+          looking at and no clear home for them. */}
     </div>
   );
 }
