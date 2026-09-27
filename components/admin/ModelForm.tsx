@@ -9,7 +9,7 @@ import {
   PRICE_DISPLAY_LABELS,
   type PriceDisplay,
 } from "@/lib/pricing";
-import type { CategoryDTO } from "@/lib/types";
+import type { CategoryDTO, ModelDTO } from "@/lib/types";
 
 export type ModelFormValues = {
   name: string;
@@ -33,7 +33,10 @@ const EMPTY: ModelFormValues = {
   priceDisplay: "Exact",
   images: [],
   isActive: true,
-  isFeatured: false,
+  // On by default: a new design is normally something worth putting in the
+  // shop window, and it is easier to untick the occasional exception than to
+  // remember to tick every other one.
+  isFeatured: true,
   displayOrder: 0,
 };
 
@@ -74,6 +77,35 @@ export default function ModelForm({
       .then((r) => r.json())
       .then((d) => setCategories(d.categories ?? []));
   }, []);
+
+  /**
+   * A new design goes to the end of the running order.
+   *
+   * Every design used to be created on 0, so a shop with a dozen of them had a
+   * dozen ties and the order came down to whatever the database returned. With
+   * two already numbered 1 and 2, this offers 3.
+   *
+   * Only on create: an existing design keeps the position it was given.
+   */
+  const isNew = !initialValues;
+
+  useEffect(() => {
+    if (!isNew) return;
+
+    fetch("/api/admin/models")
+      .then((r) => r.json())
+      .then((d) => {
+        const orders: number[] = (d.models ?? []).map((m: ModelDTO) => m.displayOrder ?? 0);
+        const next = orders.length ? Math.max(...orders) + 1 : 1;
+        // Functional update: the owner may already have typed in other fields
+        // while this was in flight, and those must not be thrown away.
+        setValues((current) => ({ ...current, displayOrder: next }));
+      })
+      .catch(() => {
+        // Ordering is a convenience, not a requirement — leave it at the
+        // default and let the field be edited by hand.
+      });
+  }, [isNew]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

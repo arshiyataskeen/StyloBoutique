@@ -81,8 +81,12 @@ export default function CylinderGallery({ images }: { images: string[] }) {
   // Fall back to a phone-sized turn for the first paint, before measuring.
   const width = box.width || 320;
   const height = box.height || width * 1.25;
-  const around = positionsAround(width);
-  const count = around * TURNS;
+  // Never more panels than there are photos — the ring used to wrap round with
+  // `images[i % images.length]`, so a short set appeared two or three times
+  // over and the same garment could be visible twice at once.
+  const wanted = positionsAround(width) * TURNS;
+  const count = Math.min(wanted, images.length);
+  const around = Math.max(3, Math.ceil(count / TURNS));
   // Sized from the angular positions, not the panel count: two panels a turn
   // apart occupy the same slice of the circle, so they do not each need room.
   const cardW = panelWidth(width, around);
@@ -95,7 +99,8 @@ export default function CylinderGallery({ images }: { images: string[] }) {
   // left once a panel and a little clearance are accounted for.
   const climb = Math.max(0, height - cardH - 24);
 
-  const panels = Array.from({ length: count }, (_, i) => images[i % images.length]);
+  // Each photo appears once; `count` is already capped at images.length.
+  const panels = images.slice(0, count);
   // Two full turns across the whole set, so consecutive panels are a wide step
   // apart around the axis as well as a small step up it.
   const angle = (360 * TURNS) / count;

@@ -33,21 +33,32 @@ export default function ModelCard({
       whileHover={{ y: -6 }}
       // The card is a div with a stretched link rather than one big anchor, so
       // the WhatsApp button can sit on top without nesting one <a> inside another.
-      className="group relative overflow-hidden rounded-2xl border border-border bg-surface transition-shadow duration-300 hover:shadow-xl hover:shadow-black/10"
+      className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-surface transition-shadow duration-300 hover:shadow-xl hover:shadow-black/10"
     >
-      <div className="relative aspect-[4/5] overflow-hidden">
+      {/* 16:10 to match the category tiles, with the photo contained rather
+          than cropped and a blurred copy filling whatever it leaves bare. */}
+      <div className="relative aspect-[16/10] overflow-hidden">
         {image ? (
-          <motion.img
-            src={image}
-            alt={model.name}
-            loading="lazy"
-            decoding="async"
-            initial={{ clipPath: "inset(12% 0% 0% 0%)", scale: 1.08 }}
-            whileInView={{ clipPath: "inset(0% 0% 0% 0%)", scale: 1 }}
-            viewport={{ once: true, margin: "-40px" }}
-            transition={{ duration: 0.65, ease: EASE }}
-            className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
-          />
+          <>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={image}
+              alt=""
+              aria-hidden
+              className="absolute inset-0 h-full w-full scale-110 object-cover blur-xl"
+            />
+            <motion.img
+              src={image}
+              alt={model.name}
+              loading="lazy"
+              decoding="async"
+              initial={{ opacity: 0, scale: 1.06 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true, margin: "-40px" }}
+              transition={{ duration: 0.65, ease: EASE }}
+              className="absolute inset-0 h-full w-full object-contain transition-transform duration-700 ease-out group-hover:scale-105"
+            />
+          </>
         ) : (
           <div className="relative flex h-full w-full flex-col items-center justify-center gap-3 overflow-hidden bg-gradient-to-br from-[#f6f1e8] via-[#efe6d6] to-[#e6d8c2]">
             <span
@@ -69,12 +80,28 @@ export default function ModelCard({
         </span>
       </div>
 
-      <div className="p-3 sm:p-4">
-        <h3 className="font-serif text-base leading-snug transition-colors group-hover:text-accent sm:text-lg">
-          {model.name}
-        </h3>
-        <div className="mt-2 flex flex-wrap items-baseline gap-x-2 gap-y-0.5 sm:justify-between">
-          <span className={hidden ? "text-sm text-muted" : "font-medium text-accent"}>
+      {/* Laid out like the category tiles: title with the arrow beside it, the
+          description under, then the one line of detail at the bottom. */}
+      <div className="flex flex-1 flex-col p-5">
+        <div className="flex items-start justify-between gap-3">
+          <h3 className="font-serif text-xl leading-snug transition-colors group-hover:text-accent">
+            {model.name}
+          </h3>
+          <ArrowUpRight className="mt-1 h-4 w-4 shrink-0 text-muted transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-accent" />
+        </div>
+
+        {model.description && (
+          <p className="mt-1.5 flex-1 line-clamp-3 text-sm text-muted">{model.description}</p>
+        )}
+
+        <div className="mt-4 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+          <span
+            className={
+              hidden
+                ? "text-xs uppercase tracking-[0.15em] text-accent"
+                : "font-medium text-accent"
+            }
+          >
             {priceLabel(model.price, model.priceDisplay)}
           </span>
           {!hidden && model.priceNote && (

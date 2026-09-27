@@ -3,7 +3,6 @@
 import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { Ruler, ArrowUpRight } from "lucide-react";
-import { formatPrice } from "@/lib/utils";
 import type { ModelDTO } from "@/lib/types";
 
 /** Enough cards per half that the track always overflows a wide screen. */
@@ -19,16 +18,29 @@ function Card({ model }: { model: ModelDTO }) {
       href={`/models/${model.id}`}
       className="group block w-56 shrink-0 overflow-hidden rounded-2xl border border-border bg-surface transition-shadow duration-300 hover:shadow-xl hover:shadow-black/10 sm:w-64"
     >
+      {/* A fixed 4:5 so every card is the same size in the row, with the photo
+          contained inside it rather than cropped to fill. */}
       <div className="relative aspect-[4/5] overflow-hidden">
         {image ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={image}
-            alt={model.name}
-            loading="lazy"
-            decoding="async"
-            className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
-          />
+          <>
+            {/* The same photo, enlarged and blurred, filling whatever the
+                contained one leaves bare. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={image}
+              alt=""
+              aria-hidden
+              className="absolute inset-0 h-full w-full scale-110 object-cover blur-xl"
+            />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={image}
+              alt={model.name}
+              loading="lazy"
+              decoding="async"
+              className="absolute inset-0 h-full w-full object-contain transition-transform duration-700 ease-out group-hover:scale-105"
+            />
+          </>
         ) : (
           <div className="flex h-full w-full flex-col items-center justify-center gap-3 bg-gradient-to-br from-[#f6f1e8] via-[#efe6d6] to-[#e6d8c2]">
             <span className="flex h-14 w-14 items-center justify-center rounded-full border border-accent/25 bg-white/70 text-accent/70">
@@ -44,16 +56,19 @@ function Card({ model }: { model: ModelDTO }) {
         </span>
       </div>
 
+      {/*
+        No price here. The homepage is a shop window, and most designs are set
+        to "ask instead" anyway — this row was printing formatPrice(0) and
+        showing every card as ₹0, which reads as free rather than as unpriced.
+        The category name is the useful line in its place.
+      */}
       <div className="p-4">
-        <h3 className="truncate font-serif text-lg leading-snug transition-colors group-hover:text-accent">
+        <p className="truncate text-[11px] uppercase tracking-[0.18em] text-accent">
+          {typeof model.category === "string" ? "Made to measure" : model.category.name}
+        </p>
+        <h3 className="mt-1 truncate font-serif text-lg leading-snug transition-colors group-hover:text-accent">
           {model.name}
         </h3>
-        <div className="mt-2 flex items-baseline justify-between gap-2">
-          <span className="font-medium text-accent">{formatPrice(model.price)}</span>
-          {model.priceNote && (
-            <span className="truncate text-xs text-muted">{model.priceNote}</span>
-          )}
-        </div>
       </div>
     </Link>
   );

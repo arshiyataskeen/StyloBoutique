@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
-import { Ruler, X } from "lucide-react";
+import { Ruler, X, ArrowLeft } from "lucide-react";
 import AskPriceButtons from "@/components/public/AskPriceButtons";
 import { isPriceHidden, priceLabel } from "@/lib/pricing";
 import type { ModelDTO } from "@/lib/types";
@@ -36,14 +36,35 @@ export default function ModelDetail({
 }) {
   const category = typeof model.category === "string" ? null : model.category;
   const images = model.images;
+  /** Everything but the cover — see the note on the thumbnail strip below. */
+  const gallery = images.slice(1);
   const [active, setActive] = useState(0);
   const [zoomed, setZoomed] = useState(false);
 
   const current = images[active];
   const hidden = isPriceHidden(model.priceDisplay);
+  /** Shape of the photo on show, so the frame can take it. 0.8 until measured. */
+  const [ratio, setRatio] = useState(0.8);
 
   return (
-    <div className="mx-auto max-w-6xl px-5 py-8 sm:py-10">
+    <div className="mx-auto max-w-6xl px-5 py-6 sm:py-8">
+      {/* Back to where the design came from, so a visitor is never stranded on
+          a design page with only the browser button to get out. */}
+      <motion.div
+        initial={{ opacity: 0, x: -8 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.4, ease: EASE }}
+        className="mb-5"
+      >
+        <Link
+          href={category ? `/catalog/${category.slug}` : "/catalog"}
+          className="group inline-flex items-center gap-2 text-sm text-muted transition-colors hover:text-accent"
+        >
+          <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
+          {category ? `Back to ${category.name}` : "Back to catalog"}
+        </Link>
+      </motion.div>
+
       <div className="grid gap-6 sm:gap-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
         {/* main photo */}
         <motion.div
@@ -51,7 +72,12 @@ export default function ModelDetail({
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: EASE }}
         >
-          <div className="relative aspect-[4/5] overflow-hidden rounded-2xl border border-border bg-background">
+          {/* The frame takes the photo's own shape, eased so switching between
+              a portrait and a square reads as the frame settling. */}
+          <div
+            style={{ aspectRatio: ratio }}
+            className="relative overflow-hidden rounded-2xl border border-border bg-background transition-[aspect-ratio] duration-500 ease-out"
+          >
             {current ? (
               <AnimatePresence mode="wait" initial={false}>
                 <motion.img
@@ -59,12 +85,18 @@ export default function ModelDetail({
                   src={current}
                   alt={model.name}
                   onClick={() => setZoomed(true)}
-                  // Wipes up from the lower edge while settling out of a slight
-                  // zoom, so switching thumbnails reads as a reveal, not a blink.
-                  initial={{ opacity: 0, scale: 1.06, clipPath: "inset(14% 0% 0% 0%)" }}
-                  animate={{ opacity: 1, scale: 1, clipPath: "inset(0% 0% 0% 0%)" }}
+                  onLoad={(event) => {
+                    const img = event.currentTarget;
+                    if (img.naturalWidth && img.naturalHeight) {
+                      setRatio(img.naturalWidth / img.naturalHeight);
+                    }
+                  }}
+                  initial={{ opacity: 0, scale: 1.04 }}
+                  animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 1.02 }}
                   transition={{ duration: 0.55, ease: EASE }}
+                  // cover is safe because the frame has taken the photo's own
+                  // shape — there is nothing left to crop.
                   className="absolute inset-0 h-full w-full cursor-zoom-in object-cover"
                 />
               </AnimatePresence>
@@ -140,38 +172,56 @@ export default function ModelDetail({
             </Link>
           </motion.div>
 
-          {/* every photo of this piece, in a grid rather than one at a time */}
-          {images.length > 1 && (
+          {/*
+            The views of the piece. The cover is left out: it is a branded
+            title card rather than a photograph of the garment, and showing it
+            here put a picture of the design's own name among its close-ups.
+          */}
+          {gallery.length > 0 && (
             <motion.div variants={row} className="mt-9 border-t border-border/80 pt-6">
               <p className="mb-3 text-xs uppercase tracking-[0.18em] text-muted">
-                {images.length} photos of this design
+                {gallery.length} {gallery.length === 1 ? "view" : "views"} of this design
               </p>
               <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-4">
-                {images.map((url, i) => (
-                  <motion.button
-                    key={url}
-                    type="button"
-                    onClick={() => setActive(i)}
-                    aria-label={`View photo ${i + 1}`}
-                    aria-current={i === active}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.35, delay: 0.3 + i * 0.04, ease: EASE }}
-                    whileHover={{ scale: 1.05, y: -2 }}
-                    whileTap={{ scale: 0.97 }}
-                    className={`aspect-square overflow-hidden rounded-lg border-2 transition-colors ${
-                      i === active ? "border-accent" : "border-transparent hover:border-accent/40"
-                    }`}
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={url}
-                      alt=""
-                      loading="lazy"
-                      className="h-full w-full object-cover"
-                    />
-                  </motion.button>
-                ))}
+                {gallery.map((url, i) => {
+                  // Index within the full array, since `active` indexes that.
+                  const realIndex = i + 1;
+                  return (
+                    <motion.button
+                      key={url}
+                      type="button"
+                      onClick={() => setActive(realIndex)}
+                      aria-label={`View photo ${realIndex}`}
+                      aria-current={realIndex === active}
+                      // Each thumbnail turns up out of the page rather than
+                      // simply appearing, staggered along the row.
+                      initial={{ opacity: 0, y: 14, rotateX: -25 }}
+                      animate={{ opacity: 1, y: 0, rotateX: 0 }}
+                      transition={{ duration: 0.45, delay: 0.3 + i * 0.06, ease: EASE }}
+                      whileHover={{ scale: 1.07, y: -3 }}
+                      whileTap={{ scale: 0.96 }}
+                      style={{ transformPerspective: 600 }}
+                      className={`group/thumb relative aspect-square overflow-hidden rounded-lg border-2 transition-colors ${
+                        realIndex === active
+                          ? "border-accent"
+                          : "border-transparent hover:border-accent/40"
+                      }`}
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={url}
+                        alt=""
+                        loading="lazy"
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover/thumb:scale-110"
+                      />
+                      <span
+                        className={`absolute inset-0 bg-accent/20 transition-opacity duration-300 ${
+                          realIndex === active ? "opacity-0" : "opacity-0 group-hover/thumb:opacity-100"
+                        }`}
+                      />
+                    </motion.button>
+                  );
+                })}
               </div>
             </motion.div>
           )}

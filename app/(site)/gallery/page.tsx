@@ -17,7 +17,10 @@ async function getGalleryData() {
     getSiteSettings(),
   ]);
 
-  const designPhotos = models.flatMap((m) => m.images);
+  // slice(1) drops each design's cover. Those are branded title cards — the
+  // design's name set over a backdrop — which belong on a catalog tile, not in
+  // a gallery of the work itself. The Set then removes any photo used twice.
+  const designPhotos = models.flatMap((m) => m.images.slice(1));
   const all = Array.from(new Set([...designPhotos, ...settings.galleryImages]));
 
   // Shuffled server-side, so the order varies per visit with no hydration mismatch.

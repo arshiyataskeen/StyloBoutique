@@ -4,10 +4,19 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Plus, Pencil, Trash2, ImagePlus } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
-import type { ModelDTO } from "@/lib/types";
+import {
+  PRICE_DISPLAYS,
+  PRICE_DISPLAY_HINTS,
+  PRICE_DISPLAY_LABELS,
+  resolvePriceDisplay,
+  type PriceDisplay,
+} from "@/lib/pricing";
+import type { CategoryDTO, ModelDTO } from "@/lib/types";
 
 export default function AdminModelsPage() {
   const [models, setModels] = useState<ModelDTO[]>([]);
+  const [categories, setCategories] = useState<CategoryDTO[]>([]);
+  const [categoryFilter, setCategoryFilter] = useState("");
 
   async function load() {
     const res = await fetch("/api/admin/models");
@@ -22,10 +31,33 @@ export default function AdminModelsPage() {
       .then((data) => {
         if (!ignore) setModels(data.models ?? []);
       });
+    fetch("/api/admin/categories")
+      .then((res) => res.json())
+      .then((data) => {
+        if (!ignore) setCategories(data.categories ?? []);
+      });
     return () => {
       ignore = true;
     };
   }, []);
+
+  // Filtered in the browser rather than refetching: the whole list is already
+  // here, and a shop's catalogue is never large enough to be worth a round trip.
+  const categoryIdOf = (model: ModelDTO) =>
+    typeof model.category === "string" ? model.category : model.category.id;
+
+  const visible = categoryFilter
+    ? models.filter((m) => categoryIdOf(m) === categoryFilter)
+    : models;
+
+  async function setPriceDisplay(model: ModelDTO, priceDisplay: PriceDisplay) {
+    await fetch(`/api/admin/models/${model.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ priceDisplay }),
+    });
+    load();
+  }
 
   async function toggleActive(model: ModelDTO) {
     await fetch(`/api/admin/models/${model.id}`, {
@@ -46,12 +78,32 @@ export default function AdminModelsPage() {
     <div>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="font-serif text-2xl sm:text-3xl">Models</h1>
-        <Link
-          href="/admin/models/new"
-          className="flex items-center gap-2 rounded-full bg-foreground px-5 py-2.5 text-sm text-background"
-        >
-          <Plus className="h-4 w-4" /> New Model
-        </Link>
+
+        <div className="flex flex-wrap items-center gap-3">
+          <select
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+            aria-label="Filter by category"
+            className="rounded-lg border border-border bg-surface px-3 py-2 text-base sm:text-sm"
+          >
+            <option value="">All categories ({models.length})</option>
+            {categories.map((c) => {
+              const n = models.filter((m) => categoryIdOf(m) === c.id).length;
+              return (
+                <option key={c.id} value={c.id}>
+                  {c.name} ({n})
+                </option>
+              );
+            })}
+          </select>
+
+          <Link
+            href="/admin/models/new"
+            className="flex items-center gap-2 rounded-full bg-foreground px-5 py-2.5 text-sm text-background"
+          >
+            <Plus className="h-4 w-4" /> New Model
+          </Link>
+        </div>
       </div>
 
       <div className="mt-6 overflow-x-auto rounded-2xl border border-border bg-surface">
@@ -62,12 +114,13 @@ export default function AdminModelsPage() {
               <th className="px-5 py-3 font-normal">Name</th>
               <th className="px-5 py-3 font-normal">Category</th>
               <th className="w-px whitespace-nowrap px-5 py-3 font-normal">Price</th>
+              <th className="w-px whitespace-nowrap px-5 py-3 font-normal">Visitors see</th>
               <th className="w-px whitespace-nowrap px-5 py-3 font-normal">Status</th>
               <th className="w-px whitespace-nowrap px-5 py-3 text-right font-normal">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {models.map((m) => (
+            {visible.map((m) => (
               <tr key={m.id} className="border-t border-border">
                 <td className="px-5 py-3">
                   <Link
@@ -105,6 +158,23 @@ export default function AdminModelsPage() {
                 </td>
                 <td className="whitespace-nowrap px-5 py-3">{formatPrice(m.price)}</td>
                 <td className="px-5 py-3">
+                  {/* Changed here rather than only in the edit form, because
+                      switching a design between showing and hiding its price is
+                      a one-click decision, not a reason to open a whole page. */}
+                  <select
+                    value={resolvePriceDisplay(m.priceDisplay)}
+                    onChange={(e) => setPriceDisplay(m, e.target.value as PriceDisplay)}
+                    title={PRICE_DISPLAY_HINTS[resolvePriceDisplay(m.priceDisplay)]}
+                    className="rounded-lg border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-accent"
+                  >
+                    {PRICE_DISPLAYS.map((d) => (
+                      <option key={d} value={d}>
+                        {PRICE_DISPLAY_LABELS[d]}
+                      </option>
+                    ))}
+                  </select>
+                </td>
+                <td className="px-5 py-3">
                   <button
                     onClick={() => toggleActive(m)}
                     className={m.isActive ? "text-emerald-600" : "text-muted"}
@@ -124,10 +194,14 @@ export default function AdminModelsPage() {
                 </td>
               </tr>
             ))}
-            {models.length === 0 && (
+            {visible.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-5 py-8 text-center text-muted">
-                  No designs yet — use “New Model” to add your first one.
+                <td colSpan={7} className="px-5 py-8 text-center text-muted">
+                  {/* An empty catalogue and an empty filter are different
+                      situations, and the advice for each is different too. */}
+                  {models.length === 0
+                    ? "No designs yet — use “New Model” to add your first one."
+                    : "No designs in this category. Choose another, or add one."}
                 </td>
               </tr>
             )}
