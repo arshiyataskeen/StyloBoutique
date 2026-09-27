@@ -5,6 +5,7 @@ import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { Ruler, X, ArrowLeft } from "lucide-react";
 import AskPriceButtons from "@/components/public/AskPriceButtons";
+import PhotoRope from "@/components/public/PhotoRope";
 import { isPriceHidden, priceLabel } from "@/lib/pricing";
 import type { ModelDTO } from "@/lib/types";
 
@@ -111,6 +112,25 @@ export default function ModelDetail({
               </div>
             )}
           </div>
+
+          {/*
+            The other views hang here, under the picture they belong to, in the
+            space the details column leaves empty. They used to sit as a static
+            grid on the far side of the page from the photo they change.
+          */}
+          {gallery.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5, delay: 0.35, ease: EASE }}
+              className="mt-5"
+            >
+              <p className="mb-1 text-xs uppercase tracking-[0.18em] text-muted">
+                {gallery.length} {gallery.length === 1 ? "view" : "views"} of this design
+              </p>
+              <PhotoRope images={gallery} activeIndex={active} onPick={setActive} />
+            </motion.div>
+          )}
         </motion.div>
 
         {/* details */}
@@ -172,59 +192,6 @@ export default function ModelDetail({
             </Link>
           </motion.div>
 
-          {/*
-            The views of the piece. The cover is left out: it is a branded
-            title card rather than a photograph of the garment, and showing it
-            here put a picture of the design's own name among its close-ups.
-          */}
-          {gallery.length > 0 && (
-            <motion.div variants={row} className="mt-9 border-t border-border/80 pt-6">
-              <p className="mb-3 text-xs uppercase tracking-[0.18em] text-muted">
-                {gallery.length} {gallery.length === 1 ? "view" : "views"} of this design
-              </p>
-              <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-4">
-                {gallery.map((url, i) => {
-                  // Index within the full array, since `active` indexes that.
-                  const realIndex = i + 1;
-                  return (
-                    <motion.button
-                      key={url}
-                      type="button"
-                      onClick={() => setActive(realIndex)}
-                      aria-label={`View photo ${realIndex}`}
-                      aria-current={realIndex === active}
-                      // Each thumbnail turns up out of the page rather than
-                      // simply appearing, staggered along the row.
-                      initial={{ opacity: 0, y: 14, rotateX: -25 }}
-                      animate={{ opacity: 1, y: 0, rotateX: 0 }}
-                      transition={{ duration: 0.45, delay: 0.3 + i * 0.06, ease: EASE }}
-                      whileHover={{ scale: 1.07, y: -3 }}
-                      whileTap={{ scale: 0.96 }}
-                      style={{ transformPerspective: 600 }}
-                      className={`group/thumb relative aspect-square overflow-hidden rounded-lg border-2 transition-colors ${
-                        realIndex === active
-                          ? "border-accent"
-                          : "border-transparent hover:border-accent/40"
-                      }`}
-                    >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={url}
-                        alt=""
-                        loading="lazy"
-                        className="h-full w-full object-cover transition-transform duration-500 group-hover/thumb:scale-110"
-                      />
-                      <span
-                        className={`absolute inset-0 bg-accent/20 transition-opacity duration-300 ${
-                          realIndex === active ? "opacity-0" : "opacity-0 group-hover/thumb:opacity-100"
-                        }`}
-                      />
-                    </motion.button>
-                  );
-                })}
-              </div>
-            </motion.div>
-          )}
         </motion.div>
       </div>
 

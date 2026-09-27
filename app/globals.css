@@ -74,6 +74,20 @@ html.lenis body {
   to { transform: rotateY(360deg); }
 }
 
+/* Photos pegged to a line, drifting past. The track holds the set twice over,
+   so sliding it exactly half its width loops with no visible seam. */
+@keyframes rope-drift {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+/* Each photo swings a little on its peg. Different durations per photo stop
+   the row moving as one block. */
+@keyframes rope-sway {
+  0%, 100% { transform: rotate(-2.4deg); }
+  50% { transform: rotate(2.4deg); }
+}
+
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;

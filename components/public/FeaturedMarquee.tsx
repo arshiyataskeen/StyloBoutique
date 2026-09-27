@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Ruler, ArrowUpRight } from "lucide-react";
 import type { ModelDTO } from "@/lib/types";
@@ -12,35 +12,40 @@ const SPEED = 38;
 
 function Card({ model }: { model: ModelDTO }) {
   const image = model.images[0];
+  /** Shape of this card's cover, once it has loaded. 4:5 until then. */
+  const [ratio, setRatio] = useState(0.8);
 
   return (
     <Link
       href={`/models/${model.id}`}
       className="group block w-56 shrink-0 overflow-hidden rounded-2xl border border-border bg-surface transition-shadow duration-300 hover:shadow-xl hover:shadow-black/10 sm:w-64"
     >
-      {/* A fixed 4:5 so every card is the same size in the row, with the photo
-          contained inside it rather than cropped to fill. */}
-      <div className="relative aspect-[4/5] overflow-hidden">
+      {/*
+        The frame takes the cover's own shape rather than a fixed 4:5. These
+        covers are wide title cards, and forcing them into a portrait box left
+        a deep band above and below that had to be papered over with blur.
+        Sized to the picture, there is nothing to fill.
+      */}
+      <div
+        style={{ aspectRatio: ratio }}
+        className="relative overflow-hidden transition-[aspect-ratio] duration-500 ease-out"
+      >
         {image ? (
-          <>
-            {/* The same photo, enlarged and blurred, filling whatever the
-                contained one leaves bare. */}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={image}
-              alt=""
-              aria-hidden
-              className="absolute inset-0 h-full w-full scale-110 object-cover blur-xl"
-            />
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={image}
-              alt={model.name}
-              loading="lazy"
-              decoding="async"
-              className="absolute inset-0 h-full w-full object-contain transition-transform duration-700 ease-out group-hover:scale-105"
-            />
-          </>
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={image}
+            alt={model.name}
+            loading="lazy"
+            decoding="async"
+            onLoad={(event) => {
+              const img = event.currentTarget;
+              if (img.naturalWidth && img.naturalHeight) {
+                setRatio(img.naturalWidth / img.naturalHeight);
+              }
+            }}
+            // cover is exact here, because the frame is the picture's shape.
+            className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+          />
         ) : (
           <div className="flex h-full w-full flex-col items-center justify-center gap-3 bg-gradient-to-br from-[#f6f1e8] via-[#efe6d6] to-[#e6d8c2]">
             <span className="flex h-14 w-14 items-center justify-center rounded-full border border-accent/25 bg-white/70 text-accent/70">

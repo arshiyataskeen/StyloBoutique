@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Ruler, ArrowUpRight, MessageCircle } from "lucide-react";
@@ -22,6 +23,8 @@ export default function ModelCard({
   const image = model.images[0];
   const hidden = isPriceHidden(model.priceDisplay);
   const askable = hidden && Boolean(whatsapp);
+  /** Shape of this design's cover, once it has loaded. 16:10 until then. */
+  const [ratio, setRatio] = useState(1.6);
 
   return (
     <motion.div
@@ -35,30 +38,30 @@ export default function ModelCard({
       // the WhatsApp button can sit on top without nesting one <a> inside another.
       className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-surface transition-shadow duration-300 hover:shadow-xl hover:shadow-black/10"
     >
-      {/* 16:10 to match the category tiles, with the photo contained rather
-          than cropped and a blurred copy filling whatever it leaves bare. */}
-      <div className="relative aspect-[16/10] overflow-hidden">
+      {/* The frame takes the cover's own shape, so the picture fills it exactly
+          — nothing cropped, and nothing to pad out. */}
+      <div
+        style={{ aspectRatio: ratio }}
+        className="relative overflow-hidden transition-[aspect-ratio] duration-500 ease-out"
+      >
         {image ? (
-          <>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={image}
-              alt=""
-              aria-hidden
-              className="absolute inset-0 h-full w-full scale-110 object-cover blur-xl"
-            />
-            <motion.img
-              src={image}
-              alt={model.name}
-              loading="lazy"
-              decoding="async"
-              initial={{ opacity: 0, scale: 1.06 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true, margin: "-40px" }}
-              transition={{ duration: 0.65, ease: EASE }}
-              className="absolute inset-0 h-full w-full object-contain transition-transform duration-700 ease-out group-hover:scale-105"
-            />
-          </>
+          <motion.img
+            src={image}
+            alt={model.name}
+            loading="lazy"
+            decoding="async"
+            onLoad={(event) => {
+              const img = event.currentTarget;
+              if (img.naturalWidth && img.naturalHeight) {
+                setRatio(img.naturalWidth / img.naturalHeight);
+              }
+            }}
+            initial={{ opacity: 0, scale: 1.06 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true, margin: "-40px" }}
+            transition={{ duration: 0.65, ease: EASE }}
+            className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+          />
         ) : (
           <div className="relative flex h-full w-full flex-col items-center justify-center gap-3 overflow-hidden bg-gradient-to-br from-[#f6f1e8] via-[#efe6d6] to-[#e6d8c2]">
             <span
