@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Plus, Pencil, Trash2, ImagePlus, ChevronDown } from "lucide-react";
+import { Plus, Pencil, Trash2, ImagePlus } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
 import {
   PRICE_DISPLAYS,
@@ -12,6 +12,40 @@ import {
   type PriceDisplay,
 } from "@/lib/pricing";
 import type { CategoryDTO, ModelDTO } from "@/lib/types";
+
+function FilterPill({
+  label,
+  count,
+  active,
+  onClick,
+}: {
+  label: string;
+  count: number;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm transition-colors ${
+        active
+          ? "border-accent bg-accent/10 text-accent"
+          : "border-border bg-surface text-foreground/75 hover:border-accent hover:text-accent"
+      }`}
+    >
+      {label}
+      <span
+        className={`rounded-full px-1.5 py-0.5 text-[11px] tabular-nums ${
+          active ? "bg-accent/15 text-accent" : "bg-background text-muted"
+        }`}
+      >
+        {count}
+      </span>
+    </button>
+  );
+}
 
 export default function AdminModelsPage() {
   const [models, setModels] = useState<ModelDTO[]>([]);
@@ -79,40 +113,33 @@ export default function AdminModelsPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="font-serif text-2xl sm:text-3xl">Models</h1>
 
-        <div className="flex flex-wrap items-center gap-3">
-          {/* appearance-none so the native control is not a different shape and
-              height from the button beside it; the chevron below replaces the
-              one the browser would have drawn. */}
-          <div className="relative">
-            <select
-              value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value)}
-              aria-label="Filter by category"
-              className="cursor-pointer appearance-none rounded-full border border-border bg-surface py-2.5 pl-5 pr-10 text-sm transition-colors hover:border-accent focus:border-accent focus:outline-none"
-            >
-              <option value="">All categories ({models.length})</option>
-              {categories.map((c) => {
-                const n = models.filter((m) => categoryIdOf(m) === c.id).length;
-                return (
-                  <option key={c.id} value={c.id}>
-                    {c.name} ({n})
-                  </option>
-                );
-              })}
-            </select>
-            <ChevronDown
-              aria-hidden
-              className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted"
-            />
-          </div>
+        <Link
+          href="/admin/models/new"
+          className="flex items-center gap-2 rounded-full bg-foreground px-5 py-2.5 text-sm text-background transition-transform hover:scale-105"
+        >
+          <Plus className="h-4 w-4" /> New Model
+        </Link>
+      </div>
 
-          <Link
-            href="/admin/models/new"
-            className="flex items-center gap-2 rounded-full bg-foreground px-5 py-2.5 text-sm text-background transition-transform hover:scale-105"
-          >
-            <Plus className="h-4 w-4" /> New Model
-          </Link>
-        </div>
+      {/* One button per category, side by side, with its count. Every option is
+          visible at a glance — which is also how the public catalog shows
+          them — rather than hidden behind a dropdown. */}
+      <div className="mt-5 flex flex-wrap gap-2">
+        <FilterPill
+          label="All"
+          count={models.length}
+          active={categoryFilter === ""}
+          onClick={() => setCategoryFilter("")}
+        />
+        {categories.map((c) => (
+          <FilterPill
+            key={c.id}
+            label={c.name}
+            count={models.filter((m) => categoryIdOf(m) === c.id).length}
+            active={categoryFilter === c.id}
+            onClick={() => setCategoryFilter(c.id)}
+          />
+        ))}
       </div>
 
       <div className="mt-6 overflow-x-auto rounded-2xl border border-border bg-surface">

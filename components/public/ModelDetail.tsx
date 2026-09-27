@@ -113,24 +113,6 @@ export default function ModelDetail({
             )}
           </div>
 
-          {/*
-            The other views hang here, under the picture they belong to, in the
-            space the details column leaves empty. They used to sit as a static
-            grid on the far side of the page from the photo they change.
-          */}
-          {gallery.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.5, delay: 0.35, ease: EASE }}
-              className="mt-5"
-            >
-              <p className="mb-1 text-xs uppercase tracking-[0.18em] text-muted">
-                {gallery.length} {gallery.length === 1 ? "view" : "views"} of this design
-              </p>
-              <PhotoRope images={gallery} activeIndex={active} onPick={setActive} />
-            </motion.div>
-          )}
         </motion.div>
 
         {/* details */}
@@ -194,6 +176,26 @@ export default function ModelDetail({
 
         </motion.div>
       </div>
+
+      {/*
+        The other views hang below both columns rather than inside the left
+        one. Kept in that column they could only ever be as wide as the photo
+        above them, which left the whole right-hand side — empty under "Book
+        This Design" — doing nothing.
+      */}
+      {gallery.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.35, ease: EASE }}
+          className="mt-8 border-t border-border/80 pt-6"
+        >
+          <p className="mb-1 text-xs uppercase tracking-[0.18em] text-muted">
+            {gallery.length} {gallery.length === 1 ? "view" : "views"} of this design
+          </p>
+          <PhotoRope images={gallery} activeIndex={active} onPick={setActive} />
+        </motion.div>
+      )}
 
       <AnimatePresence>
         {zoomed && current && (
