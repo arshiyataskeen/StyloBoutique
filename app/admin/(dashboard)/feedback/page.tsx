@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Star, Check, EyeOff, Trash2, Clock, PenLine, Plus, Loader2 } from "lucide-react";
 import { format } from "date-fns";
+import RatingFaces, { labelForRating } from "@/components/RatingFaces";
 
 type Feedback = {
   id: string;
@@ -124,41 +125,27 @@ export default function AdminFeedbackPage() {
           For feedback a customer gave you in person. It is published straight away.
         </p>
 
-        <div className="mt-4 grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto]">
-          <div>
-            <label className="mb-1 block text-sm">Customer name</label>
-            <input
-              value={draft.name}
-              onChange={(e) => setDraft({ ...draft, name: e.target.value })}
-              required
-              minLength={2}
-              maxLength={60}
-              placeholder="e.g. Anjali R"
-              className="w-full rounded-lg border border-border bg-background px-3 py-2 outline-none focus:border-accent"
-            />
-          </div>
+        <div className="mt-4">
+          <label className="mb-1 block text-sm">Customer name</label>
+          <input
+            value={draft.name}
+            onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+            required
+            minLength={2}
+            maxLength={60}
+            placeholder="e.g. Anjali R"
+            className="w-full max-w-sm rounded-lg border border-border bg-background px-3 py-2 outline-none focus:border-accent"
+          />
+        </div>
 
-          <div>
-            <span className="mb-1 block text-sm">Rating</span>
-            <div className="flex gap-1 py-1.5">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => setDraft({ ...draft, rating: i + 1 })}
-                  aria-label={`${i + 1} star${i === 0 ? "" : "s"}`}
-                  className="p-0.5"
-                >
-                  <Star
-                    className={`h-6 w-6 transition-colors ${
-                      i < draft.rating ? "text-accent" : "text-border"
-                    }`}
-                    fill="currentColor"
-                  />
-                </button>
-              ))}
-            </div>
-          </div>
+        {/* The same face scale the customer sees, so a rating given over the
+            counter and one left on the site mean the same thing. */}
+        <div className="mt-4 max-w-md">
+          <span className="mb-2 block text-sm">How did it turn out?</span>
+          <RatingFaces
+            value={draft.rating}
+            onChange={(rating) => setDraft({ ...draft, rating })}
+          />
         </div>
 
         <div className="mt-4">
@@ -205,14 +192,21 @@ export default function AdminFeedbackPage() {
                       {item.status}
                     </span>
                     {item.rating && (
-                      <span className="flex gap-0.5" aria-label={`${item.rating} out of 5`}>
-                        {Array.from({ length: 5 }).map((_, s) => (
-                          <Star
-                            key={s}
-                            className={`h-3 w-3 ${s < item.rating! ? "text-accent" : "text-border"}`}
-                            fill="currentColor"
-                          />
-                        ))}
+                      <span className="flex items-center gap-1.5">
+                        <span className="flex gap-0.5" aria-label={`${item.rating} out of 5`}>
+                          {Array.from({ length: 5 }).map((_, s) => (
+                            <Star
+                              key={s}
+                              className={`h-3 w-3 ${
+                                s < item.rating! ? "text-accent" : "text-border"
+                              }`}
+                              fill="currentColor"
+                            />
+                          ))}
+                        </span>
+                        {/* The word too, so the list reads in the same terms the
+                            customer chose from rather than as a bare score. */}
+                        <span className="text-xs text-muted">{labelForRating(item.rating)}</span>
                       </span>
                     )}
                   </div>

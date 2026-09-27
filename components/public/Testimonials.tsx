@@ -6,6 +6,17 @@ import FeedbackButton from "@/components/public/FeedbackButton";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
+/**
+ * How far this note hangs off true, in degrees.
+ *
+ * Derived from the position so it is identical on the server and in the
+ * browser — Math.random here would render one angle on the server, a different
+ * one on hydration, and React would flag the mismatch. Repeats every five, at
+ * angles small enough to read as hand-pinned rather than careless.
+ */
+const TILTS = [-1.8, 1.2, -0.9, 2.0, -1.4];
+const tiltOf = (index: number) => TILTS[index % TILTS.length];
+
 export type FeedbackItem = {
   id: string;
   name: string;
@@ -50,29 +61,50 @@ export default function Testimonials({
           </p>
         ) : (
           <div
-            className={`grid gap-5 sm:grid-cols-2 ${headless ? "" : "mt-8"} ${
+            // A touch more room than a flat grid needs: a tilted note reaches
+            // past its own box at the corners.
+            className={`grid gap-6 sm:grid-cols-2 sm:gap-7 ${headless ? "" : "mt-8"} ${
               bare ? "" : "lg:grid-cols-3"
             }`}
           >
             {feedback.map((item, i) => (
               <motion.figure
                 key={item.id}
-                // Cards arrive tipped slightly forward and settle upright, like
-                // a card being laid down — staggered, and capped so a long list
-                // does not trail off into a slow drip.
-                initial={{ opacity: 0, y: 26, rotateX: -12 }}
-                whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
+                /*
+                  Notes pinned to a board rather than cells in a table.
+                  Each one hangs at a slightly different angle and swings
+                  upright as it is pinned, then straightens when you hover it.
+
+                  The tilt comes from the index, not Math.random — a random
+                  angle would differ between the server render and the browser
+                  and React would report a hydration mismatch.
+                */
+                initial={{ opacity: 0, y: 30, rotate: tiltOf(i) * 2.5 }}
+                whileInView={{ opacity: 1, y: 0, rotate: tiltOf(i) }}
                 viewport={{ once: true, margin: "-60px" }}
-                transition={{ duration: 0.6, delay: Math.min(i, 8) * 0.08, ease: EASE }}
-                whileHover={{ y: -5 }}
-                style={{ transformPerspective: 900 }}
-                className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-surface p-5 transition-shadow duration-300 hover:border-accent/40 hover:shadow-lg hover:shadow-black/5"
+                transition={{
+                  type: "spring",
+                  stiffness: 140,
+                  damping: 14,
+                  delay: Math.min(i, 8) * 0.09,
+                }}
+                whileHover={{ rotate: 0, y: -6, scale: 1.02 }}
+                className="group relative flex h-full flex-col rounded-lg border border-border bg-surface p-5 pt-7 shadow-[0_2px_10px_rgba(32,28,24,0.06)] transition-shadow duration-300 hover:shadow-[0_10px_28px_rgba(32,28,24,0.12)]"
               >
-                {/* An oversized quote mark bleeding off the corner, so a wall
-                    of cards reads as quotes rather than as boxes of text. */}
+                {/* The pin holding it up. */}
+                <span
+                  aria-hidden
+                  className="absolute left-1/2 top-2.5 -translate-x-1/2"
+                >
+                  <span className="block h-2.5 w-2.5 rounded-full bg-accent shadow-[0_1px_3px_rgba(32,28,24,0.35)]" />
+                  <span className="mx-auto block h-1 w-0.5 bg-accent/40" />
+                </span>
+
+                {/* A soft quote mark behind the text, kept faint so it reads as
+                    paper rather than as decoration competing with the words. */}
                 <Quote
                   aria-hidden
-                  className="pointer-events-none absolute -right-3 -top-2 h-20 w-20 text-accent/[0.07] transition-colors duration-300 group-hover:text-accent/[0.12]"
+                  className="pointer-events-none absolute -right-2 bottom-2 h-16 w-16 text-accent/[0.06] transition-colors duration-300 group-hover:text-accent/[0.10]"
                   strokeWidth={1.5}
                   fill="currentColor"
                 />
@@ -88,7 +120,7 @@ export default function Testimonials({
                         viewport={{ once: true }}
                         transition={{
                           duration: 0.3,
-                          delay: Math.min(i, 8) * 0.08 + 0.25 + s * 0.06,
+                          delay: Math.min(i, 8) * 0.09 + 0.3 + s * 0.06,
                           ease: EASE,
                         }}
                       >
