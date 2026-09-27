@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 /**
  * The other views of a design, pegged to a line and drifting past.
@@ -27,16 +27,41 @@ export default function PhotoRope({
   onPick: (index: number) => void;
 }) {
   const [paused, setPaused] = useState(false);
-  const trackRef = useRef<HTMLDivElement>(null);
+  const [width, setWidth] = useState(0);
+  const boxRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = boxRef.current;
+    if (!el) return;
+    // A resize subscription, so setState runs from the callback rather than
+    // synchronously during the effect.
+    const observer = new ResizeObserver(([entry]) => setWidth(entry.contentRect.width));
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   if (images.length === 0) return null;
 
-  // Enough pegs that the line is full even for a design with two photos.
-  const repeats = Math.max(2, Math.ceil(8 / images.length));
-  const run = Array.from({ length: repeats }).flatMap(() => images);
+  /**
+   * How many photos go in one half of the track.
+   *
+   * The drift slides the track by exactly half its width, which only loops
+   * seamlessly if that half is at least as wide as the frame — otherwise the
+   * tail of the first half arrives before the second half has reached the far
+   * edge, and the rope appears to run out with bare line beside it.
+   *
+   * PHOTO_SPAN is the widest a photo plus its gap gets (sm: 144px + 16px).
+   */
+  const PHOTO_SPAN = 160;
+  const needed = Math.ceil((width || 640) / PHOTO_SPAN) + 2;
+  const copies = Math.max(1, Math.ceil(needed / images.length));
+  const half = Array.from({ length: copies }).flatMap(() => images);
+  // Two identical halves: sliding by 50% lands exactly on the repeat.
+  const run = [...half, ...half];
 
   return (
     <div
+      ref={boxRef}
       className="relative select-none overflow-hidden pt-3"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
@@ -48,7 +73,6 @@ export default function PhotoRope({
       />
 
       <div
-        ref={trackRef}
         className="flex w-max gap-4 motion-reduce:!animate-none"
         style={{
           animation: "rope-drift 38s linear infinite",
