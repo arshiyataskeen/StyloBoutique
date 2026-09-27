@@ -69,6 +69,8 @@ export default function ModelForm({
   const setGallery = (next: string[]) =>
     setValues({ ...values, images: cover ? [cover, ...next] : next });
   const [categories, setCategories] = useState<CategoryDTO[]>([]);
+  /** Everything already saved, so the next free position can be worked out. */
+  const [allModels, setAllModels] = useState<ModelDTO[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -79,15 +81,27 @@ export default function ModelForm({
   }, []);
 
   /**
-   * A new design goes to the end of the running order.
+   * A new design goes to the end of the running order **within its category**.
    *
-   * Every design used to be created on 0, so a shop with a dozen of them had a
-   * dozen ties and the order came down to whatever the database returned. With
-   * two already numbered 1 and 2, this offers 3.
+   * The order only ever means anything inside a category — that is how the
+   * catalog lists them — so numbering across the whole shop made the first
+   * blouse number 6 because five kids-wear designs happened to exist. Each
+   * category counts from 1.
    *
    * Only on create: an existing design keeps the position it was given.
    */
   const isNew = !initialValues;
+
+  const categoryIdOf = (model: ModelDTO) =>
+    typeof model.category === "string" ? model.category : model.category.id;
+
+  /** Next free position in `categoryId`, given everything already saved. */
+  const nextOrderIn = (categoryId: string, models: ModelDTO[]) => {
+    const orders = models
+      .filter((m) => categoryIdOf(m) === categoryId)
+      .map((m) => m.displayOrder ?? 0);
+    return orders.length ? Math.max(...orders) + 1 : 1;
+  };
 
   useEffect(() => {
     if (!isNew) return;
@@ -95,16 +109,20 @@ export default function ModelForm({
     fetch("/api/admin/models")
       .then((r) => r.json())
       .then((d) => {
-        const orders: number[] = (d.models ?? []).map((m: ModelDTO) => m.displayOrder ?? 0);
-        const next = orders.length ? Math.max(...orders) + 1 : 1;
+        const models: ModelDTO[] = d.models ?? [];
+        setAllModels(models);
         // Functional update: the owner may already have typed in other fields
         // while this was in flight, and those must not be thrown away.
-        setValues((current) => ({ ...current, displayOrder: next }));
+        setValues((current) => ({
+          ...current,
+          displayOrder: current.category ? nextOrderIn(current.category, models) : 1,
+        }));
       })
       .catch(() => {
         // Ordering is a convenience, not a requirement — leave it at the
         // default and let the field be edited by hand.
       });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isNew]);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -136,7 +154,18 @@ export default function ModelForm({
         <label className="mb-1 block text-sm">Category</label>
         <select
           value={values.category}
-          onChange={(e) => setValues({ ...values, category: e.target.value })}
+          onChange={(e) => {
+            const category = e.target.value;
+            // Renumber for the new category — positions are per category, so
+            // carrying one over from another would be meaningless. Done here
+            // rather than in an effect: setting state in an effect body trips
+            // react-hooks/set-state-in-effect.
+            setValues((current) => ({
+              ...current,
+              category,
+              displayOrder: isNew ? nextOrderIn(category, allModels) : current.displayOrder,
+            }));
+          }}
           required
           className="w-full rounded-lg border border-border bg-background px-3 py-2 outline-none focus:border-accent"
         >

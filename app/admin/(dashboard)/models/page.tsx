@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Plus, Pencil, Trash2, ImagePlus } from "lucide-react";
+import { Plus, Pencil, Trash2, ImagePlus, ChevronLeft, ChevronRight } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
 import {
   PRICE_DISPLAYS,
@@ -47,10 +47,14 @@ function FilterPill({
   );
 }
 
+/** Designs per page. Matches the Feedback list, so the admin feels consistent. */
+const PAGE_SIZE = 10;
+
 export default function AdminModelsPage() {
   const [models, setModels] = useState<ModelDTO[]>([]);
   const [categories, setCategories] = useState<CategoryDTO[]>([]);
   const [categoryFilter, setCategoryFilter] = useState("");
+  const [page, setPage] = useState(1);
 
   async function load() {
     const res = await fetch("/api/admin/models");
@@ -80,9 +84,17 @@ export default function AdminModelsPage() {
   const categoryIdOf = (model: ModelDTO) =>
     typeof model.category === "string" ? model.category : model.category.id;
 
-  const visible = categoryFilter
+  const matching = categoryFilter
     ? models.filter((m) => categoryIdOf(m) === categoryFilter)
     : models;
+
+  const pageCount = Math.max(1, Math.ceil(matching.length / PAGE_SIZE));
+  // Clamped rather than stored blindly: switching to a category with fewer
+  // designs, or deleting the last one on a page, would otherwise leave you
+  // looking at a page that no longer exists.
+  const current = Math.min(page, pageCount);
+  const start = (current - 1) * PAGE_SIZE;
+  const visible = matching.slice(start, start + PAGE_SIZE);
 
   async function setPriceDisplay(model: ModelDTO, priceDisplay: PriceDisplay) {
     await fetch(`/api/admin/models/${model.id}`, {
@@ -129,7 +141,10 @@ export default function AdminModelsPage() {
           label="All"
           count={models.length}
           active={categoryFilter === ""}
-          onClick={() => setCategoryFilter("")}
+          onClick={() => {
+            setCategoryFilter("");
+            setPage(1);
+          }}
         />
         {categories.map((c) => (
           <FilterPill
@@ -137,7 +152,12 @@ export default function AdminModelsPage() {
             label={c.name}
             count={models.filter((m) => categoryIdOf(m) === c.id).length}
             active={categoryFilter === c.id}
-            onClick={() => setCategoryFilter(c.id)}
+            // Back to the first page: staying on page 3 of a category with
+            // one design would show an empty table.
+            onClick={() => {
+              setCategoryFilter(c.id);
+              setPage(1);
+            }}
           />
         ))}
       </div>
@@ -244,6 +264,54 @@ export default function AdminModelsPage() {
           </tbody>
         </table>
       </div>
+
+      {/* Only worth showing once there is more than one page of them. */}
+      {pageCount > 1 && (
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+          <p className="text-xs text-muted">
+            Showing {start + 1}–{Math.min(start + PAGE_SIZE, matching.length)} of{" "}
+            {matching.length}
+          </p>
+
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => setPage(current - 1)}
+              disabled={current === 1}
+              aria-label="Previous page"
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-border text-muted transition-colors hover:border-accent hover:text-accent disabled:opacity-40 disabled:hover:border-border disabled:hover:text-muted"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+
+            {Array.from({ length: pageCount }).map((_, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => setPage(i + 1)}
+                aria-current={current === i + 1}
+                className={`h-9 min-w-9 rounded-full px-3 text-sm tabular-nums transition-colors ${
+                  current === i + 1
+                    ? "bg-foreground text-background"
+                    : "border border-border text-muted hover:border-accent hover:text-accent"
+                }`}
+              >
+                {i + 1}
+              </button>
+            ))}
+
+            <button
+              type="button"
+              onClick={() => setPage(current + 1)}
+              disabled={current === pageCount}
+              aria-label="Next page"
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-border text-muted transition-colors hover:border-accent hover:text-accent disabled:opacity-40 disabled:hover:border-border disabled:hover:text-muted"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
