@@ -16,8 +16,15 @@ const EASE = [0.22, 1, 0.36, 1] as const;
  * complain about". The breakdown answers the first and the filter the second —
  * including the one-star filter, which is the one people look for.
  */
-/** Cards on screen at once — four rows of two at the width this grid uses. */
-const PER_VIEW = 8;
+/**
+ * Cards on screen at once.
+ *
+ * Four rows either way: the grid is two columns from 640px up and one below
+ * it, so eight on a laptop and four on a phone come to the same amount of
+ * scrolling rather than the same number of cards.
+ */
+const PER_VIEW_WIDE = 8;
+const PER_VIEW_NARROW = 4;
 /** How long a batch stays up. Long enough to read the longest of them. */
 const ROTATE_MS = 8000;
 
@@ -25,6 +32,17 @@ export default function ReviewsBrowser({ feedback }: { feedback: FeedbackItem[] 
   const [only, setOnly] = useState<number | null>(null);
   const [batch, setBatch] = useState(0);
   const [paused, setPaused] = useState(false);
+  // Starts narrow and widens after mount: measuring during render would give
+  // the server one answer and the browser another.
+  const [perView, setPerView] = useState(PER_VIEW_NARROW);
+
+  useEffect(() => {
+    const wide = window.matchMedia("(min-width: 640px)");
+    const apply = () => setPerView(wide.matches ? PER_VIEW_WIDE : PER_VIEW_NARROW);
+    apply();
+    wide.addEventListener("change", apply);
+    return () => wide.removeEventListener("change", apply);
+  }, []);
 
   const rated = feedback.filter((f) => typeof f.rating === "number");
   const average =
@@ -39,11 +57,11 @@ export default function ReviewsBrowser({ feedback }: { feedback: FeedbackItem[] 
 
   const matching = only === null ? feedback : feedback.filter((f) => f.rating === only);
 
-  const batches = Math.max(1, Math.ceil(matching.length / PER_VIEW));
-  // Clamped, so changing the filter to a smaller set cannot leave the view on
-  // a batch that no longer exists.
+  const batches = Math.max(1, Math.ceil(matching.length / perView));
+  // Clamped, so changing the filter — or turning a phone sideways, which halves
+  // the number of batches — cannot leave the view on one that no longer exists.
   const currentBatch = batch % batches;
-  const shown = matching.slice(currentBatch * PER_VIEW, currentBatch * PER_VIEW + PER_VIEW);
+  const shown = matching.slice(currentBatch * perView, currentBatch * perView + perView);
 
   /**
    * Move to the next batch on a timer.
@@ -182,8 +200,8 @@ export default function ReviewsBrowser({ feedback }: { feedback: FeedbackItem[] 
                 key={i}
                 type="button"
                 onClick={() => setBatch(i)}
-                aria-label={`Show reviews ${i * PER_VIEW + 1}–${Math.min(
-                  (i + 1) * PER_VIEW,
+                aria-label={`Show reviews ${i * perView + 1}–${Math.min(
+                  (i + 1) * perView,
                   matching.length
                 )}`}
                 aria-current={currentBatch === i}
