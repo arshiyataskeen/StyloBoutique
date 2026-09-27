@@ -57,34 +57,64 @@ export default function Testimonials({
             {feedback.map((item, i) => (
               <motion.figure
                 key={item.id}
-                initial={{ opacity: 0, y: 18 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-40px" }}
-                transition={{ duration: 0.5, delay: i * 0.06, ease: EASE }}
-                className="flex h-full flex-col rounded-2xl border border-border bg-surface p-5"
+                // Cards arrive tipped slightly forward and settle upright, like
+                // a card being laid down — staggered, and capped so a long list
+                // does not trail off into a slow drip.
+                initial={{ opacity: 0, y: 26, rotateX: -12 }}
+                whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
+                viewport={{ once: true, margin: "-60px" }}
+                transition={{ duration: 0.6, delay: Math.min(i, 8) * 0.08, ease: EASE }}
+                whileHover={{ y: -5 }}
+                style={{ transformPerspective: 900 }}
+                className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-surface p-5 transition-shadow duration-300 hover:border-accent/40 hover:shadow-lg hover:shadow-black/5"
               >
-                <Quote className="h-5 w-5 shrink-0 text-accent/40" strokeWidth={1.5} />
+                {/* An oversized quote mark bleeding off the corner, so a wall
+                    of cards reads as quotes rather than as boxes of text. */}
+                <Quote
+                  aria-hidden
+                  className="pointer-events-none absolute -right-3 -top-2 h-20 w-20 text-accent/[0.07] transition-colors duration-300 group-hover:text-accent/[0.12]"
+                  strokeWidth={1.5}
+                  fill="currentColor"
+                />
 
                 {item.rating && (
-                  <div className="mt-3 flex gap-0.5" aria-label={`${item.rating} out of 5`}>
+                  <div className="flex gap-0.5" aria-label={`${item.rating} out of 5`}>
                     {Array.from({ length: 5 }).map((_, s) => (
-                      <Star
+                      <motion.span
                         key={s}
-                        className={`h-3.5 w-3.5 ${
-                          s < item.rating! ? "text-accent" : "text-border"
-                        }`}
-                        fill="currentColor"
-                      />
+                        // Stars fill one after another, left to right.
+                        initial={{ opacity: 0, scale: 0.4 }}
+                        whileInView={{ opacity: 1, scale: 1 }}
+                        viewport={{ once: true }}
+                        transition={{
+                          duration: 0.3,
+                          delay: Math.min(i, 8) * 0.08 + 0.25 + s * 0.06,
+                          ease: EASE,
+                        }}
+                      >
+                        <Star
+                          className={`h-4 w-4 ${
+                            s < item.rating! ? "text-accent" : "text-border"
+                          }`}
+                          fill="currentColor"
+                        />
+                      </motion.span>
                     ))}
                   </div>
                 )}
 
-                <blockquote className="mt-3 flex-1 text-sm leading-relaxed text-foreground/80">
+                <blockquote className="relative mt-3 flex-1 text-sm leading-relaxed text-foreground/80">
                   {item.message}
                 </blockquote>
 
-                <figcaption className="mt-4 text-xs uppercase tracking-[0.15em] text-muted">
-                  {item.name}
+                <figcaption className="relative mt-4 flex items-center gap-2.5 border-t border-border/70 pt-3">
+                  {/* Initial in a ring — a face for the name without a photo. */}
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent/10 font-serif text-sm text-accent">
+                    {item.name.trim().charAt(0).toUpperCase()}
+                  </span>
+                  <span className="text-xs uppercase tracking-[0.15em] text-muted">
+                    {item.name}
+                  </span>
                 </figcaption>
               </motion.figure>
             ))}

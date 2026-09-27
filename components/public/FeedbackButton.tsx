@@ -2,9 +2,28 @@
 
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { MessageSquarePlus, X, Star, Loader2, CheckCircle2 } from "lucide-react";
+import {
+  MessageSquarePlus,
+  X,
+  Loader2,
+  CheckCircle2,
+  Angry,
+  Frown,
+  Meh,
+  Smile,
+  Laugh,
+} from "lucide-react";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
+
+/** The 1–5 scale, as faces. Stored as the same number a star rating would be. */
+const FACES = [
+  { value: 1, Icon: Angry, label: "Not happy" },
+  { value: 2, Icon: Frown, label: "Could be better" },
+  { value: 3, Icon: Meh, label: "Fine" },
+  { value: 4, Icon: Smile, label: "Happy" },
+  { value: 5, Icon: Laugh, label: "Delighted" },
+] as const;
 
 const field =
   "w-full rounded-lg border border-border bg-background px-3 py-2 outline-none focus:border-accent";
@@ -147,25 +166,51 @@ export default function FeedbackButton({ className }: { className?: string }) {
                       />
                     </div>
 
+                    {/*
+                      Faces rather than five identical stars. Picking a star
+                      means counting them; a face is recognised at a glance,
+                      and the word under it removes any doubt about what four
+                      out of five was meant to mean.
+                    */}
                     <div>
-                      <span className="mb-1 block text-sm">Rating</span>
-                      <div className="flex gap-1">
-                        {Array.from({ length: 5 }).map((_, i) => (
-                          <button
-                            key={i}
-                            type="button"
-                            onClick={() => setRating(i + 1)}
-                            aria-label={`${i + 1} star${i === 0 ? "" : "s"}`}
-                            className="p-0.5"
-                          >
-                            <Star
-                              className={`h-6 w-6 transition-colors ${
-                                i < rating ? "text-accent" : "text-border"
+                      <span className="mb-2 block text-sm">How did it turn out?</span>
+                      <div className="flex justify-between gap-1.5">
+                        {FACES.map(({ value, Icon, label }) => {
+                          const picked = rating === value;
+                          return (
+                            <button
+                              key={value}
+                              type="button"
+                              onClick={() => setRating(value)}
+                              aria-label={label}
+                              aria-pressed={picked}
+                              className={`flex flex-1 flex-col items-center gap-1.5 rounded-xl border py-2.5 transition-all ${
+                                picked
+                                  ? "border-accent bg-accent/10"
+                                  : "border-transparent hover:border-border hover:bg-background"
                               }`}
-                              fill="currentColor"
-                            />
-                          </button>
-                        ))}
+                            >
+                              <motion.span
+                                animate={picked ? { scale: 1.2, y: -2 } : { scale: 1, y: 0 }}
+                                transition={{ type: "spring", stiffness: 420, damping: 18 }}
+                              >
+                                <Icon
+                                  className={`h-7 w-7 transition-colors ${
+                                    picked ? "text-accent" : "text-muted/60"
+                                  }`}
+                                  strokeWidth={1.75}
+                                />
+                              </motion.span>
+                              <span
+                                className={`text-[10px] leading-tight transition-colors ${
+                                  picked ? "font-medium text-accent" : "text-muted"
+                                }`}
+                              >
+                                {label}
+                              </span>
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
 

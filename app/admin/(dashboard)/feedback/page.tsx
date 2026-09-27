@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Star, Check, EyeOff, Trash2, Clock } from "lucide-react";
+import { Star, Check, EyeOff, Trash2, Clock, PenLine, Plus, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 
 type Feedback = {
@@ -19,9 +19,15 @@ const STATUS_STYLE: Record<Feedback["status"], string> = {
   Hidden: "bg-background text-muted border-border",
 };
 
+/** Blank form, and what "Add" resets back to. */
+const EMPTY_DRAFT = { name: "", message: "", rating: 5 };
+
 export default function AdminFeedbackPage() {
   const [items, setItems] = useState<Feedback[]>([]);
   const [loading, setLoading] = useState(true);
+  const [draft, setDraft] = useState(EMPTY_DRAFT);
+  const [adding, setAdding] = useState(false);
+  const [addError, setAddError] = useState<string | null>(null);
 
   // setState has to stay inside the promise callback — calling a loader
   // synchronously in the effect body trips react-hooks/set-state-in-effect.
@@ -58,6 +64,29 @@ export default function AdminFeedbackPage() {
     load();
   }
 
+  async function addReview(event: React.FormEvent) {
+    event.preventDefault();
+    setAddError(null);
+    setAdding(true);
+
+    const res = await fetch("/api/admin/feedback", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(draft),
+    });
+
+    setAdding(false);
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setAddError(data.error ?? "Could not add that review.");
+      return;
+    }
+
+    setDraft(EMPTY_DRAFT);
+    load();
+  }
+
   const pending = items.filter((i) => i.status === "Pending").length;
 
   if (loading) return <p className="text-muted">Loading…</p>;
@@ -77,8 +106,89 @@ export default function AdminFeedbackPage() {
         Nothing appears on the website until you approve it.
       </p>
 
+      {/*
+        Reviews given in the shop, on the phone or over WhatsApp would never
+        reach the site otherwise. Added here they go straight to Approved —
+        the approval step is there to stop strangers publishing, and you are
+        the one who approves.
+      */}
+      <form
+        onSubmit={addReview}
+        className="mt-6 rounded-2xl border border-border bg-surface p-5 sm:p-6"
+      >
+        <div className="flex items-center gap-2">
+          <PenLine className="h-4 w-4 text-accent" />
+          <h2 className="font-serif text-lg">Add a review yourself</h2>
+        </div>
+        <p className="mt-1 text-sm text-muted">
+          For feedback a customer gave you in person. It is published straight away.
+        </p>
+
+        <div className="mt-4 grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto]">
+          <div>
+            <label className="mb-1 block text-sm">Customer name</label>
+            <input
+              value={draft.name}
+              onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+              required
+              minLength={2}
+              maxLength={60}
+              placeholder="e.g. Anjali R"
+              className="w-full rounded-lg border border-border bg-background px-3 py-2 outline-none focus:border-accent"
+            />
+          </div>
+
+          <div>
+            <span className="mb-1 block text-sm">Rating</span>
+            <div className="flex gap-1 py-1.5">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => setDraft({ ...draft, rating: i + 1 })}
+                  aria-label={`${i + 1} star${i === 0 ? "" : "s"}`}
+                  className="p-0.5"
+                >
+                  <Star
+                    className={`h-6 w-6 transition-colors ${
+                      i < draft.rating ? "text-accent" : "text-border"
+                    }`}
+                    fill="currentColor"
+                  />
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-4">
+          <label className="mb-1 block text-sm">What they said</label>
+          <textarea
+            value={draft.message}
+            onChange={(e) => setDraft({ ...draft, message: e.target.value })}
+            required
+            minLength={10}
+            maxLength={1000}
+            rows={3}
+            placeholder="The blouse fit perfectly and the maggam work is beautiful."
+            className="w-full rounded-lg border border-border bg-background px-3 py-2 outline-none focus:border-accent"
+          />
+        </div>
+
+        {addError && <p className="mt-2 text-sm text-red-600">{addError}</p>}
+
+        <button
+          type="submit"
+          disabled={adding}
+          className="mt-4 inline-flex items-center gap-2 rounded-full bg-foreground px-5 py-2.5 text-sm text-background transition-transform hover:scale-105 disabled:opacity-60 disabled:hover:scale-100"
+        >
+          {adding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+          {adding ? "Adding…" : "Add review"}
+        </button>
+      </form>
+
       {items.length === 0 ? (
-        <p className="mt-10 rounded-2xl border border-dashed border-border bg-surface p-10 text-center text-muted">
+        <p className="mt-6 rounded-2xl border border-dashed border-border bg-surface p-10 text-center text-muted">
           No feedback yet.
         </p>
       ) : (
