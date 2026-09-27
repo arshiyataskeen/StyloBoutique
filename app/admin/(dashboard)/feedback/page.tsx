@@ -1,7 +1,18 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Star, Check, EyeOff, Trash2, Clock, PenLine, Plus, Loader2 } from "lucide-react";
+import {
+  Star,
+  Check,
+  EyeOff,
+  Trash2,
+  Clock,
+  PenLine,
+  Plus,
+  Loader2,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { format } from "date-fns";
 import RatingFaces, { labelForRating } from "@/components/RatingFaces";
 
@@ -23,12 +34,16 @@ const STATUS_STYLE: Record<Feedback["status"], string> = {
 /** Blank form, and what "Add" resets back to. */
 const EMPTY_DRAFT = { name: "", message: "", rating: 5 };
 
+/** Reviews per page. Enough to scan, few enough to avoid endless scrolling. */
+const PAGE_SIZE = 10;
+
 export default function AdminFeedbackPage() {
   const [items, setItems] = useState<Feedback[]>([]);
   const [loading, setLoading] = useState(true);
   const [draft, setDraft] = useState(EMPTY_DRAFT);
   const [adding, setAdding] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
 
   // setState has to stay inside the promise callback — calling a loader
   // synchronously in the effect body trips react-hooks/set-state-in-effect.
@@ -85,10 +100,19 @@ export default function AdminFeedbackPage() {
     }
 
     setDraft(EMPTY_DRAFT);
+    // A new review lands at the top, so go and look at it.
+    setPage(1);
     load();
   }
 
   const pending = items.filter((i) => i.status === "Pending").length;
+
+  const pageCount = Math.max(1, Math.ceil(items.length / PAGE_SIZE));
+  // Clamped rather than stored blindly: deleting the last review on the final
+  // page would otherwise leave you looking at a page that no longer exists.
+  const current = Math.min(page, pageCount);
+  const start = (current - 1) * PAGE_SIZE;
+  const visible = items.slice(start, start + PAGE_SIZE);
 
   if (loading) return <p className="text-muted">Loading…</p>;
 
@@ -180,7 +204,7 @@ export default function AdminFeedbackPage() {
         </p>
       ) : (
         <div className="mt-6 space-y-3">
-          {items.map((item) => (
+          {visible.map((item) => (
             <div key={item.id} className="rounded-2xl border border-border bg-surface p-5">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
@@ -248,6 +272,53 @@ export default function AdminFeedbackPage() {
               <p className="mt-3 text-sm leading-relaxed text-foreground/80">{item.message}</p>
             </div>
           ))}
+
+          {/* Only worth showing once there is more than one page of them. */}
+          {pageCount > 1 && (
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+              <p className="text-xs text-muted">
+                Showing {start + 1}–{Math.min(start + PAGE_SIZE, items.length)} of {items.length}
+              </p>
+
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setPage(current - 1)}
+                  disabled={current === 1}
+                  aria-label="Previous page"
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-border text-muted transition-colors hover:border-accent hover:text-accent disabled:opacity-40 disabled:hover:border-border disabled:hover:text-muted"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+
+                {Array.from({ length: pageCount }).map((_, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => setPage(i + 1)}
+                    aria-current={current === i + 1}
+                    className={`h-9 min-w-9 rounded-full px-3 text-sm tabular-nums transition-colors ${
+                      current === i + 1
+                        ? "bg-foreground text-background"
+                        : "border border-border text-muted hover:border-accent hover:text-accent"
+                    }`}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+
+                <button
+                  type="button"
+                  onClick={() => setPage(current + 1)}
+                  disabled={current === pageCount}
+                  aria-label="Next page"
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-border text-muted transition-colors hover:border-accent hover:text-accent disabled:opacity-40 disabled:hover:border-border disabled:hover:text-muted"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

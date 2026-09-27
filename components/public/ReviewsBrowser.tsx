@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Star } from "lucide-react";
 import Testimonials, { type FeedbackItem } from "@/components/public/Testimonials";
@@ -16,8 +16,15 @@ const EASE = [0.22, 1, 0.36, 1] as const;
  * complain about". The breakdown answers the first and the filter the second —
  * including the one-star filter, which is the one people look for.
  */
+/** Cards on screen at once — four rows of two at the width this grid uses. */
+const PER_VIEW = 8;
+/** How long a batch stays up. Long enough to read the longest of them. */
+const ROTATE_MS = 8000;
+
 export default function ReviewsBrowser({ feedback }: { feedback: FeedbackItem[] }) {
   const [only, setOnly] = useState<number | null>(null);
+  const [batch, setBatch] = useState(0);
+  const [paused, setPaused] = useState(false);
 
   const rated = feedback.filter((f) => typeof f.rating === "number");
   const average =
@@ -30,7 +37,29 @@ export default function ReviewsBrowser({ feedback }: { feedback: FeedbackItem[] 
   }));
   const most = Math.max(1, ...counts.map((c) => c.count));
 
-  const shown = only === null ? feedback : feedback.filter((f) => f.rating === only);
+  const matching = only === null ? feedback : feedback.filter((f) => f.rating === only);
+
+  const batches = Math.max(1, Math.ceil(matching.length / PER_VIEW));
+  // Clamped, so changing the filter to a smaller set cannot leave the view on
+  // a batch that no longer exists.
+  const currentBatch = batch % batches;
+  const shown = matching.slice(currentBatch * PER_VIEW, currentBatch * PER_VIEW + PER_VIEW);
+
+  /**
+   * Move to the next batch on a timer.
+   *
+   * Only when there is more than one, and never while the pointer is over the
+   * reviews — swapping the card someone is halfway through reading is the
+   * fastest way to make a carousel annoying. Reduced-motion users get the
+   * first batch and nothing moving.
+   */
+  useEffect(() => {
+    if (batches < 2 || paused) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const timer = setInterval(() => setBatch((b) => b + 1), ROTATE_MS);
+    return () => clearInterval(timer);
+  }, [batches, paused]);
 
   return (
     <div>
@@ -119,7 +148,11 @@ export default function ReviewsBrowser({ feedback }: { feedback: FeedbackItem[] 
         <FeedbackButton />
       </div>
 
-      <div className="mt-6">
+      <div
+        className="mt-6"
+        onMouseEnter={() => setPaused(true)}
+        onMouseLeave={() => setPaused(false)}
+      >
         {shown.length === 0 ? (
           <p className="rounded-2xl border border-dashed border-border bg-surface px-6 py-10 text-center text-sm text-muted">
             No {only}-star reviews yet.{" "}
@@ -132,8 +165,40 @@ export default function ReviewsBrowser({ feedback }: { feedback: FeedbackItem[] 
             </button>
           </p>
         ) : (
-          // key on the filter so the cards replay their entrance when it changes
-          <Testimonials key={only ?? "all"} feedback={shown} bare headless />
+          // Keyed on filter and batch, so a new set of notes is pinned up
+          // rather than the text swapping inside cards that stay put.
+          <Testimonials
+            key={`${only ?? "all"}-${currentBatch}`}
+            feedback={shown}
+            bare
+            headless
+          />
+        )}
+
+        {batches > 1 && (
+          <div className="mt-7 flex items-center justify-center gap-2">
+            {Array.from({ length: batches }).map((_, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => setBatch(i)}
+                aria-label={`Show reviews ${i * PER_VIEW + 1}–${Math.min(
+                  (i + 1) * PER_VIEW,
+                  matching.length
+                )}`}
+                aria-current={currentBatch === i}
+                className="group flex h-6 items-center px-0.5"
+              >
+                <span
+                  className={`block h-1.5 rounded-full transition-all duration-300 ${
+                    currentBatch === i
+                      ? "w-7 bg-accent"
+                      : "w-1.5 bg-border group-hover:bg-accent/50"
+                  }`}
+                />
+              </button>
+            ))}
+          </div>
         )}
       </div>
     </div>
