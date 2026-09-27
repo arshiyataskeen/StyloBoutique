@@ -90,15 +90,23 @@ export default function Footer({
         <div>
           <p className="text-xs font-medium uppercase tracking-[0.15em] text-muted">Explore</p>
           {/*
-            A row on a phone, a column from sm up. Four links stacked put four
-            lines of almost nothing between the shop details and the bottom of
-            a small screen; across, they take one. The sideways nudge on hover
-            only makes sense in the column, so it is scoped to that.
+            Two columns on a phone, one from sm up.
+
+            These were a single wrapping row while there were four of them.
+            With Reviews added they no longer fit a line on a narrow screen,
+            and a wrapping row breaks at whatever point the text happens to
+            run out — leaving one link stranded. A two-column grid puts them
+            in three tidy rows instead, and keeps Track Order off the top line
+            where Catalog and Book a Fitting belong.
+
+            The sideways nudge on hover only makes sense in the column, so it
+            is scoped to that.
           */}
-          <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm text-foreground/80 sm:flex-col sm:gap-2.5">
+          <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2.5 text-sm text-foreground/80 sm:flex sm:flex-col sm:gap-2.5">
             {[
               { href: "/catalog", label: "Catalog" },
               { href: "/book", label: "Book a Fitting" },
+              { href: "/reviews", label: "Reviews" },
               { href: "/track", label: "Track Order" },
               { href: "/contact", label: "Contact" },
             ].map(({ href, label }) => (
