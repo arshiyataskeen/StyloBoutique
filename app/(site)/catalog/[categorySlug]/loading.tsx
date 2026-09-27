@@ -3,7 +3,8 @@ import Skeleton from "@/components/public/Skeleton";
 /** Shown the instant a category is clicked, while the page data loads. */
 export default function Loading() {
   return (
-    <div className="pb-16">
+    // Matches the real page, which dropped its own bottom padding.
+    <div>
       <div className="border-b border-border/80 bg-surface">
         <div className="mx-auto max-w-6xl px-5 py-14">
           <Skeleton className="h-10 w-64" />

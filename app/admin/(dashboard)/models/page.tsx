@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Plus, Pencil, Trash2, ImagePlus } from "lucide-react";
+import { Plus, Pencil, Trash2, ImagePlus, ChevronDown } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
 import {
   PRICE_DISPLAYS,
@@ -80,26 +80,35 @@ export default function AdminModelsPage() {
         <h1 className="font-serif text-2xl sm:text-3xl">Models</h1>
 
         <div className="flex flex-wrap items-center gap-3">
-          <select
-            value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
-            aria-label="Filter by category"
-            className="rounded-lg border border-border bg-surface px-3 py-2 text-base sm:text-sm"
-          >
-            <option value="">All categories ({models.length})</option>
-            {categories.map((c) => {
-              const n = models.filter((m) => categoryIdOf(m) === c.id).length;
-              return (
-                <option key={c.id} value={c.id}>
-                  {c.name} ({n})
-                </option>
-              );
-            })}
-          </select>
+          {/* appearance-none so the native control is not a different shape and
+              height from the button beside it; the chevron below replaces the
+              one the browser would have drawn. */}
+          <div className="relative">
+            <select
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              aria-label="Filter by category"
+              className="cursor-pointer appearance-none rounded-full border border-border bg-surface py-2.5 pl-5 pr-10 text-sm transition-colors hover:border-accent focus:border-accent focus:outline-none"
+            >
+              <option value="">All categories ({models.length})</option>
+              {categories.map((c) => {
+                const n = models.filter((m) => categoryIdOf(m) === c.id).length;
+                return (
+                  <option key={c.id} value={c.id}>
+                    {c.name} ({n})
+                  </option>
+                );
+              })}
+            </select>
+            <ChevronDown
+              aria-hidden
+              className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted"
+            />
+          </div>
 
           <Link
             href="/admin/models/new"
-            className="flex items-center gap-2 rounded-full bg-foreground px-5 py-2.5 text-sm text-background"
+            className="flex items-center gap-2 rounded-full bg-foreground px-5 py-2.5 text-sm text-background transition-transform hover:scale-105"
           >
             <Plus className="h-4 w-4" /> New Model
           </Link>

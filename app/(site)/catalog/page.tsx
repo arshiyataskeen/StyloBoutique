@@ -34,7 +34,8 @@ export default async function CatalogPage() {
   const categories = await getCategories();
 
   return (
-    <div className="pb-16">
+    // Same as the category page: the block below brings its own padding.
+    <div>
       <PageHeader
         title="Our Catalog"
         description="Every design is made to your measurements. Choose a style to explore."

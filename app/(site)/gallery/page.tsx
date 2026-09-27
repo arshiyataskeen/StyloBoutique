@@ -36,7 +36,8 @@ export default async function GalleryPage() {
   const { images } = await getGalleryData();
 
   return (
-    <div className="pb-10 sm:pb-16">
+    // The section below brings its own padding; doubling it left a gap.
+    <div>
       <PageHeader
         title="Gallery"
         description="Pieces we've cut, stitched and embroidered."

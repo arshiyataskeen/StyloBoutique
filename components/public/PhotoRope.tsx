@@ -37,14 +37,14 @@ export default function PhotoRope({
 
   return (
     <div
-      className="relative select-none overflow-hidden pt-5"
+      className="relative select-none overflow-hidden pt-3"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
       {/* the line itself */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-5 h-px bg-gradient-to-r from-transparent via-border to-transparent"
+        className="pointer-events-none absolute inset-x-0 top-3 h-px bg-gradient-to-r from-transparent via-border to-transparent"
       />
 
       <div
@@ -64,7 +64,7 @@ export default function PhotoRope({
               type="button"
               onClick={() => onPick(realIndex)}
               aria-label={`View photo ${realIndex}`}
-              className="group relative shrink-0 pt-3"
+              className="group relative shrink-0 pt-2"
               style={{ transformOrigin: "50% 0%" }}
             >
               {/* the peg */}
@@ -84,7 +84,7 @@ export default function PhotoRope({
                 }}
               >
                 <span
-                  className={`block h-24 w-20 overflow-hidden rounded-lg border-2 bg-surface shadow-md shadow-black/10 transition-all duration-300 sm:h-28 sm:w-24 ${
+                  className={`block h-36 w-28 overflow-hidden rounded-lg border-2 bg-surface shadow-md shadow-black/10 transition-all duration-300 sm:h-44 sm:w-36 ${
                     isActive
                       ? "border-accent"
                       : "border-transparent group-hover:border-accent/50"
