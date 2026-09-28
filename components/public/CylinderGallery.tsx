@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Photo from "@/components/public/Photo";
 
 const GAP = 12;
 
@@ -151,23 +152,16 @@ export default function CylinderGallery({ images }: { images: string[] }) {
                     differs from the panel — square shots in a 3:4 panel left a
                     white band top and bottom. This fills them with the photo's
                     own colours, so nothing is cropped and no gap shows. */}
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+                {/* Blurred past recognition, so the small re-encode will do. */}
+                <Photo
                   src={url}
                   alt=""
-                  aria-hidden
-                  className="absolute inset-0 h-full w-full scale-110 object-cover blur-lg"
+                  fit="thumb"
+                  className="scale-110 object-cover blur-lg"
                 />
                 {/* contain, not cover: the shop's photos carry a logo in one
                     corner, and cropping to fill the panel sliced it in half. */}
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={url}
-                  alt=""
-                  loading="lazy"
-                  decoding="async"
-                  className="absolute inset-0 h-full w-full object-contain"
-                />
+                <Photo src={url} alt="" fit="thumb" className="object-contain" />
               </div>
             );
           })}

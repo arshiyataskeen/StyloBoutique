@@ -5,6 +5,7 @@ import { AnimatePresence, motion, useScroll, useTransform } from "framer-motion"
 import { ChevronLeft, ChevronRight, Scissors, X } from "lucide-react";
 import RevealText from "@/components/public/RevealText";
 import GalleryCollage from "@/components/public/GalleryCollage";
+import Photo from "@/components/public/Photo";
 import type { SiteSettingsDTO } from "@/lib/types";
 
 export default function AboutGallery({ settings }: { settings: SiteSettingsDTO }) {
@@ -148,17 +149,23 @@ export default function AboutGallery({ settings }: { settings: SiteSettingsDTO }
               </>
             )}
 
-            <motion.img
+            <motion.div
               key={activeIndex}
-              src={images[activeIndex]}
-              alt=""
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
               onClick={(e) => e.stopPropagation()}
-              className="max-h-[85dvh] max-w-full rounded-lg object-contain shadow-2xl"
-            />
+              className="relative h-[85dvh] w-full"
+            >
+              <Photo
+                src={images[activeIndex]}
+                alt=""
+                fit="full"
+                priority
+                className="rounded-lg object-contain drop-shadow-2xl"
+              />
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>

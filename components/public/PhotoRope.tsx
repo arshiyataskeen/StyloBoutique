@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Photo from "@/components/public/Photo";
 
 /**
  * The other views of a design, pegged to a line and drifting past.
@@ -108,19 +109,19 @@ export default function PhotoRope({
                 }}
               >
                 <span
-                  className={`block h-36 w-28 overflow-hidden rounded-lg border-2 bg-surface shadow-md shadow-black/10 transition-all duration-300 sm:h-44 sm:w-36 ${
+                  className={`relative block h-36 w-28 overflow-hidden rounded-lg border-2 bg-surface shadow-md shadow-black/10 transition-all duration-300 sm:h-44 sm:w-36 ${
                     isActive
                       ? "border-accent"
                       : "border-transparent group-hover:border-accent/50"
                   }`}
                 >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
+                  {/* These are pegged-up thumbnails at ~144px wide — the one
+                      place a genuinely small re-encode pays off most. */}
+                  <Photo
                     src={url}
                     alt=""
-                    loading="lazy"
-                    decoding="async"
-                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    fit="thumb"
+                    className="object-cover transition-transform duration-500 group-hover:scale-110"
                   />
                 </span>
               </span>

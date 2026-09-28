@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import Photo from "@/components/public/Photo";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 const HOLD_MS = 4200;
@@ -47,23 +48,17 @@ export default function SlowFadeStack({ images }: { images: string[] }) {
             and bottom. This fills those strips with the photo's own colours
             instead, so nothing is cropped and no empty space shows.
           */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+          {/* The backdrop is blurred past recognition, so it can be the small
+              thumbnail re-encode rather than a second copy of the full photo. */}
+          <Photo
             src={images[index]}
             alt=""
-            aria-hidden
-            className="absolute inset-0 h-full w-full scale-110 object-cover blur-2xl"
+            fit="thumb"
+            className="scale-110 object-cover blur-2xl"
           />
           {/* contain, so the whole garment is visible. These photos carry a logo
               in one corner and cover was cutting it, along with the hem. */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={images[index]}
-            alt=""
-            loading="lazy"
-            decoding="async"
-            className="absolute inset-0 h-full w-full object-contain"
-          />
+          <Photo src={images[index]} alt="" fit="tile" className="object-contain" />
         </motion.div>
       </AnimatePresence>
 

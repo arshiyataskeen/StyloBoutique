@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import RevealText from "@/components/public/RevealText";
+import Photo from "@/components/public/Photo";
 import type { ReactNode } from "react";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
@@ -39,8 +40,9 @@ export default function PageHeader({
             transition={{ duration: 1.6, ease: EASE }}
             className="absolute inset-0 -z-20 motion-reduce:!transform-none"
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={image!} alt="" className="h-full w-full object-cover" />
+            {/* The banner is the largest thing on the page and the first thing
+                painted, so it loads eagerly and at full width. */}
+            <Photo src={image!} alt="" fit="full" priority className="object-cover" />
           </motion.div>
           {/*
             Two scrims, because one was not enough. A bottom-up gradient alone

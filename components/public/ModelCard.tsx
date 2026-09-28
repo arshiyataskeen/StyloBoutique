@@ -5,6 +5,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { Ruler, ArrowUpRight, MessageCircle } from "lucide-react";
 import { ModelDTO } from "@/lib/types";
+import Photo from "@/components/public/Photo";
 import { isPriceHidden, priceLabel, whatsappLink } from "@/lib/pricing";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
@@ -45,23 +46,32 @@ export default function ModelCard({
         className="relative overflow-hidden transition-[aspect-ratio] duration-500 ease-out"
       >
         {image ? (
-          <motion.img
-            src={image}
-            alt={model.name}
-            loading="lazy"
-            decoding="async"
-            onLoad={(event) => {
-              const img = event.currentTarget;
-              if (img.naturalWidth && img.naturalHeight) {
-                setRatio(img.naturalWidth / img.naturalHeight);
-              }
-            }}
+          // The animation moved onto a wrapper so the photo itself can be a
+          // next/image — it still measures its own shape through onLoad, which
+          // reports the re-encoded file's dimensions and so the same ratio.
+          <motion.div
             initial={{ opacity: 0, scale: 1.06 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true, margin: "-40px" }}
             transition={{ duration: 0.65, ease: EASE }}
-            className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-          />
+            className="absolute inset-0"
+          >
+            <Photo
+              src={image}
+              alt={model.name}
+              fit="card"
+              // The first row is on screen before anything scrolls, so those
+              // covers load eagerly rather than waiting for an intersection.
+              priority={index < 4}
+              onLoad={(event) => {
+                const img = event.currentTarget;
+                if (img.naturalWidth && img.naturalHeight) {
+                  setRatio(img.naturalWidth / img.naturalHeight);
+                }
+              }}
+              className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+            />
+          </motion.div>
         ) : (
           <div className="relative flex h-full w-full flex-col items-center justify-center gap-3 overflow-hidden bg-gradient-to-br from-[#f6f1e8] via-[#efe6d6] to-[#e6d8c2]">
             <span

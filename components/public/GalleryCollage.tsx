@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ZoomIn } from "lucide-react";
+import Photo from "@/components/public/Photo";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
@@ -79,16 +80,18 @@ function Frame({
       className="group relative mb-3 block w-full cursor-zoom-in overflow-hidden rounded-2xl border border-border bg-background transition-[aspect-ratio] duration-700 ease-out sm:mb-4"
     >
       <AnimatePresence mode="popLayout" initial={false}>
-        <motion.img
+        <motion.div
           key={url}
-          src={url}
-          alt=""
-          loading="lazy"
-          decoding="async"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 1.1, ease: EASE }}
+          className="absolute inset-0"
+        >
+        <Photo
+          src={url}
+          alt=""
+          fit="tile"
           onLoad={(event) => {
             const img = event.currentTarget;
             if (img.naturalWidth && img.naturalHeight) {
@@ -97,8 +100,9 @@ function Frame({
           }}
           // cover is safe here precisely because the frame has taken the
           // photo's own shape — there is nothing left to crop.
-          className="absolute inset-0 h-full w-full object-cover"
+          className="object-cover"
         />
+        </motion.div>
       </AnimatePresence>
 
       <span className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-all duration-300 group-hover:bg-black/25 group-hover:opacity-100">

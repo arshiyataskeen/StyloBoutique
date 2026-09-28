@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import CategoryNav from "@/components/public/CategoryNav";
 import ModelCard from "@/components/public/ModelCard";
 import PageHeader from "@/components/public/PageHeader";
 import { getSiteSettings } from "@/lib/settings";
@@ -12,13 +13,36 @@ async function getCategoryWithModels(slug: string) {
   const category = await prisma.category.findFirst({ where: { slug, isActive: true } });
   if (!category) return null;
 
-  const models = await prisma.model.findMany({
-    where: { categoryId: category.id, isActive: true },
-    include: { category: { select: { id: true, name: true, slug: true } } },
-    orderBy: { displayOrder: "asc" },
-  });
+  // The full list comes back too, for the rail that lets you cross straight
+  // from one category to the next without going via /catalog.
+  const [models, categories] = await Promise.all([
+    prisma.model.findMany({
+      where: { categoryId: category.id, isActive: true },
+      include: { category: { select: { id: true, name: true, slug: true } } },
+      orderBy: { displayOrder: "asc" },
+    }),
+    prisma.category.findMany({
+      where: { isActive: true },
+      orderBy: { displayOrder: "asc" },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        _count: { select: { models: { where: { isActive: true } } } },
+      },
+    }),
+  ]);
 
-  return { category, models };
+  return {
+    category,
+    models,
+    categories: categories.map((c) => ({
+      id: c.id,
+      name: c.name,
+      slug: c.slug,
+      count: c._count.models,
+    })),
+  };
 }
 
 export default async function CategoryPage({
@@ -34,7 +58,7 @@ export default async function CategoryPage({
 
   if (!data) notFound();
 
-  const { category, models } = data;
+  const { category, models, categories } = data;
 
   return (
     // No bottom padding here: the content block below already has py-8/py-12,
@@ -49,7 +73,9 @@ export default async function CategoryPage({
 
       <div className="mx-auto max-w-6xl px-5 py-8 sm:py-12">
         {/* Matches the "Back to <category>" link on a design page, so every
-            step into the catalog has a step back out of it. */}
+            step into the catalog has a step back out of it. The full list of
+            categories waits at the foot of the page — up here it would compete
+            with the banner for the first thing you read. */}
         <Link
           href="/catalog"
           className="group mb-6 inline-flex items-center gap-2 text-sm text-muted transition-colors hover:text-accent"
@@ -88,6 +114,19 @@ export default async function CategoryPage({
           </div>
         )}
       </div>
+
+      {/* Every other category, at the foot of the page — where you arrive after
+          looking through this one, rather than before you have seen it. */}
+      <section className="border-t border-border/80 bg-surface/40">
+        <div className="mx-auto max-w-6xl px-5 py-10 sm:py-14">
+          <p className="text-xs font-medium uppercase tracking-[0.15em] text-muted">
+            Browse another category
+          </p>
+          <div className="mt-4">
+            <CategoryNav categories={categories} activeSlug={category.slug} />
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

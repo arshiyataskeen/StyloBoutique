@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowUpRight, Scissors } from "lucide-react";
+import Photo from "@/components/public/Photo";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
@@ -36,18 +37,26 @@ export default function CategoryGrid({ categories }: { categories: CategoryTile[
           >
             <div className="relative aspect-[16/10] overflow-hidden">
               {c.cover ? (
-                <motion.img
-                  src={c.cover}
-                  alt=""
-                  loading="lazy"
-                  decoding="async"
+                // The wipe lives on a wrapper now so the photo underneath can
+                // be a next/image and arrive re-encoded at tile size.
+                <motion.div
                   // Wipes down as it settles, matching the design cards.
                   initial={{ clipPath: "inset(0% 0% 14% 0%)", scale: 1.1 }}
                   whileInView={{ clipPath: "inset(0% 0% 0% 0%)", scale: 1 }}
                   viewport={{ once: true, margin: "-60px" }}
                   transition={{ duration: 0.7, ease: EASE }}
-                  className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
-                />
+                  className="absolute inset-0"
+                >
+                  <Photo
+                    src={c.cover}
+                    alt=""
+                    fit="tile"
+                    // The catalog opens on these, so the first row should not
+                    // wait for the lazy loader to notice them.
+                    priority={i < 3}
+                    className="object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+                  />
+                </motion.div>
               ) : (
                 <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#f6f1e8] via-[#efe6d6] to-[#e6d8c2]">
                   <span className="flex h-14 w-14 items-center justify-center rounded-full border border-accent/25 bg-white/70 text-accent/70">

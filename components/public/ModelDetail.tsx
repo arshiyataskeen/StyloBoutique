@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Ruler, X, ArrowLeft } from "lucide-react";
 import AskPriceButtons from "@/components/public/AskPriceButtons";
 import PhotoRope from "@/components/public/PhotoRope";
+import Photo from "@/components/public/Photo";
 import { isPriceHidden, priceLabel } from "@/lib/pricing";
 import type { ModelDTO } from "@/lib/types";
 
@@ -81,25 +82,32 @@ export default function ModelDetail({
           >
             {current ? (
               <AnimatePresence mode="wait" initial={false}>
-                <motion.img
+                <motion.div
                   key={current}
-                  src={current}
-                  alt={model.name}
-                  onClick={() => setZoomed(true)}
-                  onLoad={(event) => {
-                    const img = event.currentTarget;
-                    if (img.naturalWidth && img.naturalHeight) {
-                      setRatio(img.naturalWidth / img.naturalHeight);
-                    }
-                  }}
                   initial={{ opacity: 0, scale: 1.04 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 1.02 }}
                   transition={{ duration: 0.55, ease: EASE }}
-                  // cover is safe because the frame has taken the photo's own
-                  // shape — there is nothing left to crop.
-                  className="absolute inset-0 h-full w-full cursor-zoom-in object-cover"
-                />
+                  className="absolute inset-0"
+                >
+                  <Photo
+                    src={current}
+                    alt={model.name}
+                    fit="detail"
+                    // The whole page is about this one photograph.
+                    priority
+                    onClick={() => setZoomed(true)}
+                    onLoad={(event) => {
+                      const img = event.currentTarget;
+                      if (img.naturalWidth && img.naturalHeight) {
+                        setRatio(img.naturalWidth / img.naturalHeight);
+                      }
+                    }}
+                    // cover is safe because the frame has taken the photo's own
+                    // shape — there is nothing left to crop.
+                    className="cursor-zoom-in object-cover"
+                  />
+                </motion.div>
               </AnimatePresence>
             ) : (
               <div className="flex h-full w-full flex-col items-center justify-center gap-3 bg-gradient-to-br from-[#f6f1e8] via-[#efe6d6] to-[#e6d8c2]">
@@ -213,15 +221,23 @@ export default function ModelDetail({
             >
               <X className="h-5 w-5" />
             </button>
-            <motion.img
-              src={current}
-              alt={model.name}
+            {/* Zoom asks for the photograph at viewport size, so this one gets
+                a full-width hint and contains rather than crops. */}
+            <motion.div
               initial={{ scale: 0.96, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.96, opacity: 0 }}
               transition={{ duration: 0.3, ease: EASE }}
-              className="max-h-[85dvh] max-w-full rounded-lg object-contain shadow-2xl"
-            />
+              className="relative h-[85dvh] w-full"
+            >
+              <Photo
+                src={current}
+                alt={model.name}
+                fit="full"
+                priority
+                className="rounded-lg object-contain drop-shadow-2xl"
+              />
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>

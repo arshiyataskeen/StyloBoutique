@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Ruler, ArrowUpRight } from "lucide-react";
 import type { ModelDTO } from "@/lib/types";
+import Photo from "@/components/public/Photo";
 
 /** Enough cards per half that the track always overflows a wide screen. */
 const MIN_PER_HALF = 8;
@@ -32,12 +33,10 @@ function Card({ model }: { model: ModelDTO }) {
         className="relative overflow-hidden transition-[aspect-ratio] duration-500 ease-out"
       >
         {image ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <Photo
             src={image}
             alt={model.name}
-            loading="lazy"
-            decoding="async"
+            fit="card"
             onLoad={(event) => {
               const img = event.currentTarget;
               if (img.naturalWidth && img.naturalHeight) {
@@ -45,7 +44,7 @@ function Card({ model }: { model: ModelDTO }) {
               }
             }}
             // cover is exact here, because the frame is the picture's shape.
-            className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+            className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
           />
         ) : (
           <div className="flex h-full w-full flex-col items-center justify-center gap-3 bg-gradient-to-br from-[#f6f1e8] via-[#efe6d6] to-[#e6d8c2]">

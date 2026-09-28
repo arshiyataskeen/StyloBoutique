@@ -4,6 +4,7 @@ import { useRef } from "react";
 import MagneticLink from "@/components/public/MagneticLink";
 import { motion, useMotionValue, useScroll, useSpring, useTransform } from "framer-motion";
 import type { SiteSettingsDTO } from "@/lib/types";
+import Photo from "@/components/public/Photo";
 
 const headingVariants = {
   hidden: {},
@@ -77,20 +78,23 @@ export default function Hero({ settings }: { settings: SiteSettingsDTO }) {
               playsInline
             />
             {posterUrl && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
+              <Photo
                 src={posterUrl}
                 alt=""
-                className="hidden h-full w-full object-cover motion-reduce:block"
+                fit="full"
+                priority
+                className="hidden object-cover motion-reduce:block"
               />
             )}
           </>
         ) : imageUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          // The first thing anyone sees on the site — never lazy.
+          <Photo
             src={imageUrl}
             alt=""
-            className="h-full w-full object-cover motion-reduce:animate-none"
+            fit="full"
+            priority
+            className="object-cover motion-reduce:animate-none"
             style={{ animation: "ken-burns 20s ease-out forwards" }}
           />
         ) : null}
