@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import Carousel, { CAROUSEL_ITEM } from "@/components/public/Carousel";
+import Carousel from "@/components/public/Carousel";
 import ModelCard from "@/components/public/ModelCard";
 import FadeIn from "@/components/public/FadeIn";
 import type { ModelDTO } from "@/lib/types";
@@ -56,20 +56,17 @@ export default function MoreDesigns({
           </div>
 
           <div className="mt-5 sm:mt-6">
-            {/* Four at a time; the rest scroll. No autoplay — these cards are
-                taller than the category ones and a row of garments sliding
-                past on its own beside the one you came to look at is a
-                distraction rather than an invitation. */}
+            {/* Slides on its own, the same as the homepage row — no arrows to
+                land on top of the last card. */}
             <Carousel label={`More in ${categoryName ?? "this category"}`}>
               {siblings.map((model, i) => (
-                <div key={model.id} className={CAROUSEL_ITEM}>
-                  <ModelCard
-                    model={model}
-                    index={i}
-                    whatsapp={whatsapp}
-                    siteName={siteName}
-                  />
-                </div>
+                <ModelCard
+                  key={model.id}
+                  model={model}
+                  index={i}
+                  whatsapp={whatsapp}
+                  siteName={siteName}
+                />
               ))}
             </Carousel>
           </div>

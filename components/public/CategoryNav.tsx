@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { ArrowUpRight, Scissors } from "lucide-react";
-import Carousel, { CAROUSEL_ITEM } from "@/components/public/Carousel";
+import Carousel from "@/components/public/Carousel";
 import Photo from "@/components/public/Photo";
 
 export type CategoryLink = {
@@ -35,12 +35,12 @@ export default function CategoryNav({
   if (others.length === 0) return null;
 
   return (
-    <Carousel label="Other categories" autoPlayMs={5000}>
+    <Carousel label="Other categories">
       {others.map((c) => (
         <Link
           key={c.id}
           href={`/catalog/${c.slug}`}
-          className={`group relative overflow-hidden rounded-2xl border border-border bg-surface transition-shadow duration-300 hover:shadow-xl hover:shadow-black/10 ${CAROUSEL_ITEM}`}
+          className="group relative block overflow-hidden rounded-2xl border border-border bg-surface transition-shadow duration-300 hover:shadow-xl hover:shadow-black/10"
         >
           <div className="relative aspect-[4/3] overflow-hidden">
             {c.cover ? (
