@@ -14,43 +14,26 @@ async function getModel(id: string) {
 }
 
 /**
- * What to offer at the foot of the page — the rest of this design's category,
- * and every category. Split out because it needs the design's own category id,
- * so it cannot run in the same round trip as the design itself.
+ * The rest of this design's category, for the row at the foot of the page.
+ * Split out because it needs the design's own category id, so it cannot run in
+ * the same round trip as the design itself.
  */
-async function getMore(categoryId: string | null, excludeId: string) {
-  const [siblings, categories] = await Promise.all([
-    categoryId
-      ? prisma.model.findMany({
-          where: { categoryId, isActive: true, id: { not: excludeId } },
-          include: { category: { select: { id: true, name: true, slug: true } } },
-          orderBy: { displayOrder: "asc" },
-          // One row on a wide screen, two on a phone — enough to suggest there
-          // is more without turning this into a second catalog page.
-          take: 4,
-        })
-      : Promise.resolve([]),
-    prisma.category.findMany({
-      where: { isActive: true },
+async function getSiblings(categoryId: string | null, excludeId: string) {
+  if (!categoryId) return { siblings: [], categoryCount: 0 };
+
+  const [siblings, categoryCount] = await Promise.all([
+    prisma.model.findMany({
+      where: { categoryId, isActive: true, id: { not: excludeId } },
+      include: { category: { select: { id: true, name: true, slug: true } } },
       orderBy: { displayOrder: "asc" },
-      select: {
-        id: true,
-        name: true,
-        slug: true,
-        _count: { select: { models: { where: { isActive: true } } } },
-      },
+      // Four show at once and the rest scroll, so this is the size of the pool
+      // rather than the size of the row.
+      take: 12,
     }),
+    prisma.model.count({ where: { categoryId, isActive: true } }),
   ]);
 
-  return {
-    siblings,
-    categories: categories.map((c) => ({
-      id: c.id,
-      name: c.name,
-      slug: c.slug,
-      count: c._count.models,
-    })),
-  };
+  return { siblings, categoryCount };
 }
 
 export default async function ModelDetailPage({
@@ -63,16 +46,14 @@ export default async function ModelDetailPage({
 
   if (!model) notFound();
 
-  const { siblings, categories } = await getMore(model.categoryId, model.id);
+  const { siblings, categoryCount } = await getSiblings(model.categoryId, model.id);
   const whatsapp = settings.whatsappNumber || settings.shopPhone;
-  const categoryCount = categories.find((c) => c.id === model.categoryId)?.count;
 
   return (
     <>
       <ModelDetail model={model} whatsapp={whatsapp} siteName={settings.siteName} />
       <MoreDesigns
         siblings={siblings}
-        categories={categories}
         categoryName={model.category?.name}
         categorySlug={model.category?.slug}
         categoryCount={categoryCount}

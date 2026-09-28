@@ -1,35 +1,33 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import CategoryNav, { type CategoryLink } from "@/components/public/CategoryNav";
+import Carousel, { CAROUSEL_ITEM } from "@/components/public/Carousel";
 import ModelCard from "@/components/public/ModelCard";
 import FadeIn from "@/components/public/FadeIn";
 import type { ModelDTO } from "@/lib/types";
 
 /**
- * Where a design page goes next.
+ * Where a design page goes next: the rest of its own category, and nothing
+ * else.
  *
  * Until now the only way onward was the small "Back to <category>" link at the
  * very top — so anyone who had scrolled through the photographs had to scroll
- * all the way back up to carry on looking. This puts the rest of the category
- * at the foot of the page, where they already are, and the other categories
- * under that.
+ * all the way back up to carry on looking. This puts the sibling designs at the
+ * foot of the page, where they already are.
  *
- * It is deliberately at the end rather than another rail at the top: the page
- * is about one garment, and the alternatives belong after it, not competing
- * with it.
+ * Deliberately no category list here. A page about one garment offering every
+ * other kind of garment is a change of subject; the categories belong on the
+ * page that lists a category, which is where the visitor is heading anyway.
  */
 export default function MoreDesigns({
   siblings,
-  categories,
   categoryName,
   categorySlug,
   categoryCount,
   whatsapp,
   siteName,
 }: {
-  /** Other designs in the same category. May be empty. */
+  /** Other designs in the same category. */
   siblings: ModelDTO[];
-  categories: CategoryLink[];
   categoryName?: string | null;
   categorySlug?: string | null;
   /** How many designs the category holds in total, for the "see all" link. */
@@ -37,55 +35,45 @@ export default function MoreDesigns({
   whatsapp?: string | null;
   siteName?: string;
 }) {
-  const hasSiblings = siblings.length > 0;
-  const hasCategories = categories.length > 0;
-  if (!hasSiblings && !hasCategories) return null;
+  if (siblings.length === 0 || !categorySlug) return null;
 
   return (
     <section className="border-t border-border/80 bg-surface/40">
       <div className="mx-auto max-w-6xl px-5 py-10 sm:py-14">
-        {hasSiblings && categorySlug && (
-          <FadeIn>
-            <div className="flex flex-wrap items-baseline justify-between gap-3">
-              <h2 className="font-serif text-2xl sm:text-3xl">
-                More in {categoryName}
-              </h2>
-              {/* Only worth offering when there is more than what is shown. */}
-              {typeof categoryCount === "number" && categoryCount > siblings.length + 1 && (
-                <Link
-                  href={`/catalog/${categorySlug}`}
-                  className="group inline-flex items-center gap-1.5 text-sm text-accent hover:underline"
-                >
-                  See all {categoryCount}
-                  <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
-                </Link>
-              )}
-            </div>
+        <FadeIn>
+          <div className="flex flex-wrap items-baseline justify-between gap-3">
+            <h2 className="font-serif text-2xl sm:text-3xl">More in {categoryName}</h2>
+            {/* Only worth offering when there is more than the row can hold. */}
+            {typeof categoryCount === "number" && categoryCount > siblings.length + 1 && (
+              <Link
+                href={`/catalog/${categorySlug}`}
+                className="group inline-flex items-center gap-1.5 text-sm text-accent hover:underline"
+              >
+                See all
+                <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+              </Link>
+            )}
+          </div>
 
-            <div className="mt-5 grid grid-cols-2 gap-3 sm:mt-6 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
+          <div className="mt-5 sm:mt-6">
+            {/* Four at a time; the rest scroll. No autoplay — these cards are
+                taller than the category ones and a row of garments sliding
+                past on its own beside the one you came to look at is a
+                distraction rather than an invitation. */}
+            <Carousel label={`More in ${categoryName ?? "this category"}`}>
               {siblings.map((model, i) => (
-                <ModelCard
-                  key={model.id}
-                  model={model}
-                  index={i}
-                  whatsapp={whatsapp}
-                  siteName={siteName}
-                />
+                <div key={model.id} className={CAROUSEL_ITEM}>
+                  <ModelCard
+                    model={model}
+                    index={i}
+                    whatsapp={whatsapp}
+                    siteName={siteName}
+                  />
+                </div>
               ))}
-            </div>
-          </FadeIn>
-        )}
-
-        {hasCategories && (
-          <FadeIn delay={0.1} className={hasSiblings ? "mt-10 sm:mt-14" : ""}>
-            <p className="text-xs font-medium uppercase tracking-[0.15em] text-muted">
-              Browse another category
-            </p>
-            <div className="mt-4">
-              <CategoryNav categories={categories} activeSlug={categorySlug ?? ""} />
-            </div>
-          </FadeIn>
-        )}
+            </Carousel>
+          </div>
+        </FadeIn>
       </div>
     </section>
   );

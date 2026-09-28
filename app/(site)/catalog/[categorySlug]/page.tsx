@@ -28,7 +28,14 @@ async function getCategoryWithModels(slug: string) {
         id: true,
         name: true,
         slug: true,
-        _count: { select: { models: { where: { isActive: true } } } },
+        imageUrl: true,
+        // A photo to put on the card when the category has none of its own.
+        models: {
+          where: { isActive: true, images: { isEmpty: false } },
+          orderBy: { displayOrder: "asc" },
+          take: 1,
+          select: { images: true },
+        },
       },
     }),
   ]);
@@ -40,7 +47,9 @@ async function getCategoryWithModels(slug: string) {
       id: c.id,
       name: c.name,
       slug: c.slug,
-      count: c._count.models,
+      // Same rule as the catalog page: the category's own photo wins, a
+      // design's photo is the fallback.
+      cover: c.imageUrl || c.models[0]?.images[0] || null,
     })),
   };
 }
