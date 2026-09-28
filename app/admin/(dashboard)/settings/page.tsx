@@ -169,6 +169,20 @@ export default function AdminSettingsPage() {
                 the floating contact menu.
               </p>
             </div>
+            <div>
+              <label className="mb-1 block text-sm">YouTube (optional)</label>
+              <input
+                value={settings.youtubeUrl ?? ""}
+                onChange={(e) => setSettings({ ...settings, youtubeUrl: e.target.value })}
+                placeholder="@yourshop"
+                className="w-full rounded-lg border border-border bg-background px-3 py-2 outline-none focus:border-accent"
+              />
+              <p className="mt-1 text-xs text-muted">
+                Your handle or a channel link — not a link to a single video. Shown in the footer
+                and on the Contact page only, never on the homepage or in the floating menu. Leave
+                this empty and YouTube is not mentioned anywhere on the site.
+              </p>
+            </div>
           </div>
         </section>
 

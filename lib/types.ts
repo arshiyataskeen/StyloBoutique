@@ -98,6 +98,8 @@ export interface SiteSettingsDTO {
   /** WhatsApp goes to its own number, separate from the one on display. */
   whatsappNumber?: string | null;
   instagramUrl?: string | null;
+  /** Optional. Shown only in the footer and on the Contact page. */
+  youtubeUrl?: string | null;
   notifyEmail?: string | null;
   smtpUser?: string | null;
   /** Only ever sent admin → server. The API never returns a saved password. */

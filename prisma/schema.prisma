@@ -78,6 +78,9 @@ model SiteSettings {
   whatsappNumber String?
   /// Full Instagram profile URL, e.g. https://instagram.com/yourshop
   instagramUrl   String?
+  /// Full YouTube channel URL, e.g. https://youtube.com/@yourshop. Optional,
+  /// and shown only in the footer and on the Contact page.
+  youtubeUrl     String?
   aboutHeading   String        @default("About Us")
   aboutText      String        @default("We're a family-run tailoring studio dedicated to garments that fit exactly right. Every piece is cut and stitched by hand to your own measurements — no mass production, no guesswork.")
   galleryImages  String[]      @default([])

@@ -25,6 +25,7 @@ const PUBLIC_FIELDS = {
   shopPhone: true,
   whatsappNumber: true,
   instagramUrl: true,
+  youtubeUrl: true,
   aboutHeading: true,
   aboutText: true,
   galleryImages: true,

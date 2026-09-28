@@ -2,7 +2,9 @@ import Link from "next/link";
 import { MapPin, Phone, ArrowUpRight } from "lucide-react";
 import Logo from "@/components/public/Logo";
 import InstagramIcon from "@/components/public/InstagramIcon";
+import YoutubeIcon from "@/components/public/YoutubeIcon";
 import { parseInstagram } from "@/lib/instagram";
+import { parseYoutube } from "@/lib/youtube";
 
 export default function Footer({
   logoUrl,
@@ -11,6 +13,7 @@ export default function Footer({
   address,
   phone,
   instagramUrl,
+  youtubeUrl,
 }: {
   logoUrl?: string | null;
   siteName?: string;
@@ -18,8 +21,10 @@ export default function Footer({
   address?: string | null;
   phone?: string | null;
   instagramUrl?: string | null;
+  youtubeUrl?: string | null;
 }) {
   const instagram = parseInstagram(instagramUrl);
+  const youtube = parseYoutube(youtubeUrl);
   const mapsHref = address
     ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`
     : null;
@@ -37,18 +42,36 @@ export default function Footer({
             {tagline || "Made-to-measure tailoring, crafted for you."}
           </p>
 
-          {instagram && (
-            <a
-              href={instagram.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label={`Follow ${siteName || "us"} on Instagram`}
-              className="group mt-5 inline-flex items-center gap-2.5 rounded-full border border-border px-4 py-2 text-sm transition-colors hover:border-accent hover:text-accent"
-            >
-              <InstagramIcon className="h-4 w-4 text-accent" strokeWidth={1.75} />
-              @{instagram.handle}
-              <ArrowUpRight className="h-3.5 w-3.5 text-muted transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-accent" />
-            </a>
+          {(instagram || youtube) && (
+            <div className="mt-5 flex flex-wrap gap-2.5">
+              {instagram && (
+                <a
+                  href={instagram.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`Follow ${siteName || "us"} on Instagram`}
+                  className="group inline-flex items-center gap-2.5 rounded-full border border-border px-4 py-2 text-sm transition-colors hover:border-accent hover:text-accent"
+                >
+                  <InstagramIcon className="h-4 w-4 text-accent" strokeWidth={1.75} />
+                  @{instagram.handle}
+                  <ArrowUpRight className="h-3.5 w-3.5 text-muted transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-accent" />
+                </a>
+              )}
+
+              {youtube && (
+                <a
+                  href={youtube.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`Watch ${siteName || "us"} on YouTube`}
+                  className="group inline-flex items-center gap-2.5 rounded-full border border-border px-4 py-2 text-sm transition-colors hover:border-accent hover:text-accent"
+                >
+                  <YoutubeIcon className="h-4 w-4 text-accent" strokeWidth={1.75} />
+                  {youtube.label}
+                  <ArrowUpRight className="h-3.5 w-3.5 text-muted transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-accent" />
+                </a>
+              )}
+            </div>
           )}
         </div>
 

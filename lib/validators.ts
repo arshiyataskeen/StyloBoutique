@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { BOOKING_STATUSES, QUERY_STATUSES } from "@/lib/constants";
 import { parseInstagram } from "@/lib/instagram";
+import { parseYoutube } from "@/lib/youtube";
 import { PRICE_DISPLAYS } from "@/lib/pricing";
 
 export const bookingInputSchema = z.object({
@@ -96,6 +97,16 @@ export const settingsInputSchema = z.object({
       message: "Enter your Instagram handle, e.g. @stylo_ladies",
     })
     .optional(),
+  // Optional, unlike the others: a shop without a YouTube channel is normal,
+  // so an empty value is allowed through and simply hides the link.
+  youtubeUrl: z
+    .string()
+    .trim()
+    .refine((v) => v === "" || parseYoutube(v) !== null, {
+      message:
+        "Enter your YouTube channel — @stylo_ladies, or the channel link. A link to a single video won't work.",
+    })
+    .nullish(),
   notifyEmail: z.string().trim().email("Enter a valid email").or(z.literal("")).nullish(),
   smtpUser: z.string().trim().email("Enter a valid Gmail address").or(z.literal("")).nullish(),
   smtpPass: z.string().nullish(),

@@ -4,8 +4,10 @@ import ContactForm from "@/components/public/ContactForm";
 import FadeIn from "@/components/public/FadeIn";
 import FeedbackButton from "@/components/public/FeedbackButton";
 import InstagramIcon from "@/components/public/InstagramIcon";
+import YoutubeIcon from "@/components/public/YoutubeIcon";
 import { getSiteSettings } from "@/lib/settings";
 import { parseInstagram } from "@/lib/instagram";
+import { parseYoutube } from "@/lib/youtube";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +20,7 @@ export default async function ContactPage({
   // feedback card links to.
   const [settings, { about }] = await Promise.all([getSiteSettings(), searchParams]);
   const instagram = parseInstagram(settings.instagramUrl);
+  const youtube = parseYoutube(settings.youtubeUrl);
 
   return (
     <div className="mx-auto max-w-2xl px-5 py-10 sm:py-14">
@@ -75,6 +78,30 @@ export default async function ContactPage({
                 <p className="mt-1 text-sm text-muted">
                   @{instagram.handle} — new designs and finished pieces, posted as they leave the
                   studio.
+                </p>
+              </div>
+            </div>
+            <ArrowUpRight className="h-5 w-5 shrink-0 text-muted transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-accent" />
+          </a>
+        </FadeIn>
+      )}
+
+      {youtube && (
+        <FadeIn delay={0.35} className="mt-6">
+          <a
+            href={youtube.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group flex items-center justify-between gap-4 rounded-2xl border border-border bg-surface p-5 transition-colors hover:border-accent sm:p-6"
+          >
+            <div className="flex min-w-0 items-center gap-4">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#FF0000] text-white">
+                <YoutubeIcon className="h-5 w-5" strokeWidth={1.75} />
+              </span>
+              <div>
+                <h2 className="font-serif text-xl">Watch us on YouTube</h2>
+                <p className="mt-1 text-sm text-muted">
+                  {youtube.label} — see the work in progress and finished pieces.
                 </p>
               </div>
             </div>

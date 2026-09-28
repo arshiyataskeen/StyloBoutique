@@ -4,6 +4,7 @@ import { getAdminSettings } from "@/lib/settings";
 import { settingsInputSchema } from "@/lib/validators";
 import { revalidateSite } from "@/lib/revalidate";
 import { parseInstagram } from "@/lib/instagram";
+import { parseYoutube } from "@/lib/youtube";
 
 export async function GET() {
   // getAdminSettings() never includes smtpPass — only whether one is saved.
@@ -34,6 +35,10 @@ export async function PATCH(request: NextRequest) {
   // derive the "@handle" from it.
   if (typeof data.instagramUrl === "string") {
     data.instagramUrl = parseInstagram(data.instagramUrl)?.url ?? "";
+  }
+
+  if (typeof data.youtubeUrl === "string") {
+    data.youtubeUrl = parseYoutube(data.youtubeUrl)?.url ?? "";
   }
 
   await prisma.siteSettings.update({ where: { id: "main" }, data });

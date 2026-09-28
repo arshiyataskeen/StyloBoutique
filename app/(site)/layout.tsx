@@ -50,6 +50,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
         address={settings.shopAddress}
         phone={settings.shopPhone}
         instagramUrl={settings.instagramUrl}
+        youtubeUrl={settings.youtubeUrl}
       />
     </div>
   );
