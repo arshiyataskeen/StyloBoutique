@@ -1,4 +1,10 @@
-import { notificationHtml, sendMail, getMailStatus } from "@/lib/mailer";
+import { notificationHtml, customerHtml, sendMail, getMailStatus } from "@/lib/mailer";
+
+/** Where the customer can look their booking up. Empty if SITE_URL is unset. */
+export function trackUrl() {
+  const base = process.env.SITE_URL?.replace(/\/+$/, "");
+  return base ? `${base}/track` : null;
+}
 
 /**
  * Emails the owner about a new booking or enquiry.
@@ -28,6 +34,52 @@ export function notifyOwner({
       });
     } catch (error) {
       console.error("[notify] could not send owner notification:", error);
+    }
+  })();
+}
+
+/**
+ * Emails the customer — their booking code, or an update on it.
+ *
+ * This is the one channel that reaches them without anyone pressing send.
+ * WhatsApp cannot be automated without the paid Business API, so the shop taps
+ * a button for that; email goes on its own. Silently does nothing when the
+ * customer left the email field empty, which is allowed.
+ *
+ * Same fire-and-forget contract as notifyOwner: the booking is already saved,
+ * and a mail failure must not turn into a failed request for the customer.
+ */
+export function notifyCustomer({
+  to,
+  subject,
+  heading,
+  intro,
+  refCode,
+  body,
+  siteName,
+}: {
+  to?: string | null;
+  subject: string;
+  heading: string;
+  intro: string;
+  refCode: string;
+  body?: string | null;
+  siteName: string;
+}) {
+  if (!to?.trim()) return;
+
+  void (async () => {
+    try {
+      const { configured } = await getMailStatus();
+      if (!configured) return;
+
+      await sendMail({
+        to: to.trim(),
+        subject,
+        html: customerHtml({ heading, intro, refCode, body, trackUrl: trackUrl(), siteName }),
+      });
+    } catch (error) {
+      console.error("[notify] could not send customer notification:", error);
     }
   })();
 }

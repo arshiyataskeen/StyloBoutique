@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { motion } from "framer-motion";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, MessageCircle } from "lucide-react";
 import { isPriceHidden, priceLabel } from "@/lib/pricing";
+import { bookingCodeMessage, waLink } from "@/lib/whatsapp";
 import type { CategoryDTO, ModelDTO } from "@/lib/types";
 
 type FormValues = {
@@ -17,10 +18,20 @@ type FormValues = {
   preferredDate: string;
 };
 
-export default function BookingForm({ preselected }: { preselected?: ModelDTO | null }) {
+export default function BookingForm({
+  preselected,
+  shopWhatsapp,
+  siteName = "Stylo Ladies Botique",
+}: {
+  preselected?: ModelDTO | null;
+  /** The shop's WhatsApp number, for the "save your code" button on success. */
+  shopWhatsapp?: string | null;
+  siteName?: string;
+}) {
   const [categories, setCategories] = useState<CategoryDTO[]>([]);
   const [models, setModels] = useState<ModelDTO[]>([]);
   const [refCode, setRefCode] = useState<string | null>(null);
+  const [submitted, setSubmitted] = useState<FormValues | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   // Lets the customer drop the pre-filled design and pick another instead.
   const [locked, setLocked] = useState(Boolean(preselected));
@@ -74,10 +85,22 @@ export default function BookingForm({ preselected }: { preselected?: ModelDTO | 
     }
 
     const data = await res.json();
+    // Kept so the success screen can put the whole booking into the WhatsApp
+    // message, rather than just the code.
+    setSubmitted(values);
     setRefCode(data.refCode);
   }
 
   if (refCode) {
+    // What they actually booked — the pre-filled design, or whatever they
+    // picked from the lists. Named so the shop's WhatsApp says "Puff Sleeve
+    // Blouse" rather than an id.
+    const bookedName =
+      preselected?.name ??
+      models.find((m) => m.id === submitted?.modelId)?.name ??
+      categories.find((c) => c.id === submitted?.categoryId)?.name ??
+      null;
+
     return (
       <motion.div
         initial={{ opacity: 0, scale: 0.96 }}
@@ -95,6 +118,39 @@ export default function BookingForm({ preselected }: { preselected?: ModelDTO | 
         <p className="mt-4 rounded-lg bg-background px-4 py-3 font-mono text-xl tracking-widest text-accent sm:px-6 sm:text-2xl">
           {refCode}
         </p>
+
+        {/*
+          Sends the code to the shop from the customer's own WhatsApp.
+          The site cannot message them — that needs the paid Business API — but
+          one tap here puts the code in their chat history with the shop, which
+          is where they will actually go looking for it. It opens their app
+          with the message written; they press send.
+        */}
+        {shopWhatsapp && (
+          <a
+            href={
+              waLink(
+                shopWhatsapp,
+                bookingCodeMessage({
+                  siteName,
+                  refCode,
+                  customerName: submitted?.customerName,
+                  phone: submitted?.phone,
+                  designName: bookedName,
+                  preferredDate: submitted?.preferredDate,
+                  notes: submitted?.measurementsOrNotes,
+                })
+              ) ?? undefined
+            }
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-4 inline-flex items-center gap-2 rounded-full bg-[#25D366] px-5 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90"
+          >
+            <MessageCircle className="h-4 w-4" strokeWidth={2} />
+            Save this code on WhatsApp
+          </a>
+        )}
+
         <p className="mt-4 text-sm text-muted">
           We&apos;ll reach out on the phone number you provided. You can check your status anytime
           on the Track Order page.

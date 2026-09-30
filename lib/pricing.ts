@@ -1,4 +1,5 @@
 import { formatPrice } from "@/lib/utils";
+import { waLink } from "@/lib/whatsapp";
 
 export const PRICE_DISPLAYS = ["Exact", "From", "Hidden"] as const;
 export type PriceDisplay = (typeof PRICE_DISPLAYS)[number];
@@ -41,8 +42,11 @@ export function isPriceHidden(display: unknown): boolean {
 
 /**
  * Pre-written WhatsApp message naming the design, so the owner knows what is
- * being asked about without a follow-up question. Indian numbers entered as
- * 10 digits get the country code added.
+ * being asked about without a follow-up question.
+ *
+ * Number handling lives in lib/whatsapp.ts, which every WhatsApp link on the
+ * site now shares — this used to carry its own copy, and a shop number written
+ * with a leading zero came out as a broken link here but worked elsewhere.
  */
 export function whatsappLink({
   phone,
@@ -55,12 +59,11 @@ export function whatsappLink({
   designName: string;
   pageUrl?: string;
 }) {
-  const digits = phone.replace(/\D/g, "");
-  const number = digits.length === 10 ? `91${digits}` : digits;
-  const text = encodeURIComponent(
-    `Hi ${siteName}, could you tell me the price for "${designName}"?` +
-      (pageUrl ? `\n${pageUrl}` : "")
+  return (
+    waLink(
+      phone,
+      `Hi ${siteName}, could you tell me the price for "${designName}"?` +
+        (pageUrl ? `\n${pageUrl}` : "")
+    ) ?? ""
   );
-
-  return `https://wa.me/${number}?text=${text}`;
 }

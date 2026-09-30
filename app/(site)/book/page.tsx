@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import BookingForm from "@/components/public/BookingForm";
 import FadeIn from "@/components/public/FadeIn";
+import { getSiteSettings } from "@/lib/settings";
 import type { ModelDTO } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -27,7 +28,10 @@ export default async function BookPage({
   searchParams: Promise<{ modelId?: string }>;
 }) {
   const { modelId } = await searchParams;
-  const preselected = await getPreselected(modelId);
+  const [preselected, settings] = await Promise.all([
+    getPreselected(modelId),
+    getSiteSettings(),
+  ]);
 
   return (
     <div className="mx-auto max-w-2xl px-5 py-10 sm:py-14">
@@ -41,7 +45,11 @@ export default async function BookPage({
         </p>
       </FadeIn>
       <FadeIn delay={0.1} className="mt-10">
-        <BookingForm preselected={preselected} />
+        <BookingForm
+          preselected={preselected}
+          shopWhatsapp={settings.whatsappNumber || settings.shopPhone}
+          siteName={settings.siteName}
+        />
       </FadeIn>
     </div>
   );
